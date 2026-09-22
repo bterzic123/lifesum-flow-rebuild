@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lifesum — Onboarding &amp; Paywall Rebuild</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM — extracted from the Lifesum capture frames
+   ============================================================ */
+:root{
+  /* Lifesum surface palette */
+  --cream:#FAF0EA;          /* screen background */
+  --cream-2:#EFE2D8;        /* picker highlight bar */
+  --green:#35E06A;          /* primary action + selected state */
+  --green-ink:#0B2B18;      /* text on green */
+  --forest:#0A3A2A;         /* loader / full-bleed brand screen */
+  --neon:#3DFF6E;           /* numerals on forest */
+  --ink:#0D1512;            /* headline + body */
+  --muted:#6F6A66;          /* footer helper text */
+  --line:#E3D8D0;           /* hairlines + control borders */
+  --white:#FFFFFF;
+  --lilac:#F0B9F5;          /* their interstitial card */
+  --blue:#1470E6;           /* App Store tile */
+
+  /* studio chrome (not Lifesum — the presentation shell) */
+  --bg:#101214;
+  --bg-2:#181B1E;
+  --panel:#FFFFFF;
+  --panel-ink:#15181B;
+  --panel-muted:#5F666D;
+  --panel-line:#E6E9EC;
+  --accent:#35E06A;
+
+  --r-ctl:8px;              /* their control radius */
+  --r-media:16px;           /* their image radius */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:#E8ECEF;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:inherit}
+
+/* ---------- studio header ---------- */
+.top{
+  display:flex;align-items:center;gap:20px;
+  padding:14px 26px;border-bottom:1px solid #23272B;
+  background:var(--bg-2);position:sticky;top:0;z-index:60;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+.brand .dot{width:22px;height:22px;border-radius:6px;background:var(--green);display:grid;place-items:center}
+.brand .dot svg{width:13px;height:13px}
+.brand small{display:block;font-weight:500;font-size:11px;color:#8A9299;letter-spacing:0}
+.tabs{display:flex;gap:4px;background:#23272B;padding:4px;border-radius:10px;margin-left:auto}
+.tabs button{padding:7px 15px;border-radius:7px;font-size:13px;font-weight:600;color:#9AA2A9;transition:.15s}
+.tabs button.on{background:var(--green);color:#07130B}
+.srcbtn{font-size:12px;color:#8A9299;border:1px solid #2C3136;padding:7px 12px;border-radius:8px}
+.srcbtn:hover{color:#E8ECEF;border-color:#3D444A}
+
+/* ---------- layout ---------- */
+.view{display:none}
+.view.on{display:block}
+.stage{
+  display:grid;grid-template-columns:minmax(440px,1fr) minmax(400px,480px);
+  gap:0;align-items:start;min-height:calc(100vh - 57px);
+}
+.left{padding:30px 24px 44px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.right{border-left:1px solid #23272B;background:var(--panel);color:var(--panel-ink);
+  min-height:calc(100vh - 57px);position:sticky;top:57px;max-height:calc(100vh - 57px);overflow-y:auto}
+@media(max-width:1080px){
+  .stage{grid-template-columns:1fr}
+  .right{position:static;max-height:none;border-left:none;border-top:1px solid #23272B}
+}
+
+/* ============================================================
+   PHONE FRAME
+   ============================================================ */
+.phone{
+  width:390px;height:844px;flex:none;position:relative;
+  background:#000;border-radius:46px;padding:11px;
+  box-shadow:0 0 0 1.5px #2B3035, 0 34px 70px -18px rgba(0,0,0,.85);
+}
+.screenwrap{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--cream)}
+.island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:112px;height:31px;background:#000;border-radius:18px;z-index:50;pointer-events:none}
+.statusbar{
+  position:absolute;top:0;left:0;right:0;height:50px;z-index:45;pointer-events:none;
+  display:flex;align-items:center;justify-content:space-between;padding:14px 26px 0;
+  font-family:'Inter';font-size:13.5px;font-weight:600;color:var(--ink);letter-spacing:.01em;
+}
+.statusbar.on-dark{color:#fff}
+.sb-r{display:flex;align-items:center;gap:5px}
+.sb-r svg{display:block}
+
+/* ---------- screen shell: top / scroll body / DOCKED footer ---------- */
+.scr{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  background:var(--cream);
+  transform:translateX(100%);
+  transition:transform .36s cubic-bezier(.32,.72,0,1);
+  will-change:transform;
+}
+.scr.is-active{transform:translateX(0)}
+.scr.is-past{transform:translateX(-24%)}
+.scr.sheet{transform:translateY(100%);z-index:30}
+.scr.sheet.is-active{transform:translateY(0)}
+.scr.nofx{transition:none}
+
+.scr-top{flex:none;padding:56px 20px 10px;display:flex;align-items:center;gap:12px}
+.scr-top.bare{padding-top:50px}
+.back{width:22px;height:22px;flex:none;display:grid;place-items:center;color:var(--ink);opacity:.85}
+.prog{flex:1;height:4px;border-radius:3px;background:#E0D4CB;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ink);border-radius:3px;transition:width .35s ease}
+
+.scr-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 20px 18px;-webkit-overflow-scrolling:touch}
+.scr-body::-webkit-scrollbar{width:0}
+.scr-body.col{display:flex;flex-direction:column}
+.scr-body.col .dots{margin-top:auto;padding-top:22px}
+
+/* THE DOCKED FOOTER — outside the scroll area, no sticky overlay, no negative margins */
+.scr-foot{flex:none;padding:10px 20px 30px;background:var(--cream)}
+.scr-foot.on-dark{background:var(--forest)}
+.helper{font-size:11px;line-height:1.45;color:var(--muted);text-align:center;margin-bottom:10px;padding:0 6px}
+
+/* ---------- their controls ---------- */
+.h1{font-family:'Plus Jakarta Sans';font-size:23px;line-height:1.24;font-weight:700;letter-spacing:-.022em;color:var(--ink);margin:6px 0 16px}
+.h1.sm{font-size:20.5px}
+.sub{font-size:13.5px;line-height:1.5;color:#3E4844;margin:-8px 0 16px}
+
+.btn{
+  display:block;width:100%;padding:15px 12px;border-radius:var(--r-ctl);
+  background:var(--green);color:var(--green-ink);
+  font-family:'Inter';font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;text-align:center;
+  transition:transform .12s ease, filter .12s ease;
+}
+.btn:active{transform:scale(.985);filter:brightness(.95)}
+.btn.dark{background:#000;color:#fff}
+.btn.outline{background:var(--white);color:var(--ink);border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:none;font-weight:600;padding:12px}
+
+.opt{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:14px 14px;margin-bottom:8px;border-radius:var(--r-ctl);
+  background:var(--white);border:1px solid var(--line);
+  font-size:14px;font-weight:500;color:var(--ink);
+  transition:background .14s ease,border-color .14s ease;
+}
+.opt.sel{background:var(--green);border-color:var(--green);font-weight:600}
+.opt .tick{margin-left:auto;opacity:0;transition:opacity .14s}
+.opt.sel .tick{opacity:1}
+.opt.wide2{display:inline-flex;width:calc(50% - 5px);justify-content:center;padding:22px 10px;font-size:15px}
+
+/* ---------- wheel picker (their signature control) ---------- */
+.wheel{position:relative;height:190px;margin:18px 0 10px;display:flex;justify-content:center;gap:0}
+.wheel .bar{position:absolute;left:0;right:0;top:76px;height:38px;background:var(--cream-2);border-radius:9px;pointer-events:none}
+.wcol{
+  height:190px;overflow-y:scroll;scroll-snap-type:y mandatory;
+  scrollbar-width:none;-ms-overflow-style:none;position:relative;z-index:2;
+  text-align:center;flex:1;max-width:120px;
+}
+.wcol::-webkit-scrollbar{display:none}
+.wcol .sp{height:76px;flex:none}
+.wi{
+  height:38px;line-height:38px;scroll-snap-align:center;
+  font-family:'Inter';font-size:17px;font-weight:500;color:var(--ink);
+  opacity:.22;transition:opacity .16s ease;white-space:nowrap;
+}
+.wi.d1{opacity:.42}
+.wi.d0{opacity:1;font-weight:600}
+
+/* ---------- media + chips ---------- */
+.media{width:100%;border-radius:var(--r-media);overflow:hidden;position:relative;background:#DCD2CB;aspect-ratio:1/1}
+.media img{width:100%;height:100%;object-fit:cover;display:block}
+.media.short{aspect-ratio:4/3}
+.callout{
+  position:absolute;left:10px;bottom:10px;right:34px;background:var(--white);border-radius:10px;
+  padding:9px 11px;font-size:11.5px;line-height:1.4;font-weight:500;color:var(--ink);
+  box-shadow:0 6px 18px rgba(0,0,0,.14);display:flex;gap:7px;align-items:flex-start;
+}
+.callout .lf{flex:none;margin-top:1px}
+.badge-fab{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:12px;background:var(--forest);display:grid;place-items:center}
+.dots{display:flex;gap:5px;justify-content:center;padding:14px 0 2px}
+.dots i{width:6px;height:6px;border-radius:4px;background:#CFC3BA;transition:.2s}
+.dots i.on{width:18px;background:var(--ink)}
+
+/* ---------- proof tiles (their App Store / users cards) ---------- */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tile{border-radius:12px;padding:13px;min-height:126px;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
+.tile.appstore{background:linear-gradient(150deg,#2E7BF6,#1149C9)}
+.tile.users{background:var(--forest)}
+.tile .tt{font-family:'Plus Jakarta Sans';font-weight:800;font-size:19px;line-height:1.05;letter-spacing:-.02em}
+.tile .tl{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;opacity:.85;display:flex;align-items:center;gap:5px}
+.laurel{display:flex;align-items:center;justify-content:center;gap:7px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);padding:13px 0 9px}
+.laurel svg{opacity:.75}
+.revcard{background:var(--white);border-radius:12px;padding:14px;border:1px solid var(--line)}
+.revhead{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:var(--ink)}
+.revhead span{font-size:10.5px;font-weight:500;color:var(--muted)}
+.stars{color:#FFB400;font-size:13px;letter-spacing:1px;margin:5px 0 7px}
+.revtxt{font-size:11.5px;line-height:1.5;color:#3E4844}
+.revfoot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:9px;border-top:1px solid var(--line);font-size:10.5px;font-weight:600;color:var(--muted)}
+
+/* ---------- consent / permission ---------- */
+.iconfield{position:relative;height:150px;margin:2px 0 14px;border-radius:var(--r-media);overflow:hidden;background:radial-gradient(circle at 50% 50%,#8FF3AE 0%,#D6F7DF 45%,var(--cream) 78%)}
+.iconfield .glyph{position:absolute;font-size:15px;opacity:.5}
+.iconfield .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:var(--forest);display:grid;place-items:center}
+.logotiles{display:flex;gap:9px;align-items:center;justify-content:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.logotile{width:50px;height:50px;border-radius:14px;background:#fff;display:grid;place-items:center;box-shadow:0 5px 16px rgba(0,0,0,.12)}
+.logotile.brand{background:var(--forest)}
+.consentbody{font-size:12.5px;line-height:1.62;color:#3E4844}
+.consentbody p{margin-bottom:11px}
+.consentbody u{text-underline-offset:2px}
+
+/* iOS system permission sheet (theirs, untouched) */
+.iosheet{background:#F2F2F6;border-radius:14px;overflow:hidden;font-family:-apple-system,'Inter';margin:auto 0}
+.iosheet .ih{padding:13px;text-align:center;font-size:13px;font-weight:600;border-bottom:.5px solid #D5D5DA;color:#000}
+.iosheet .ib{padding:16px 16px 12px;text-align:center;color:#000}
+.iosheet .ico{width:44px;height:44px;border-radius:10px;background:#fff;display:grid;place-items:center;margin:0 auto 9px;box-shadow:0 1px 3px rgba(0,0,0,.14);font-size:22px}
+.iosheet h4{font-size:16px;font-weight:700;margin-bottom:5px}
+.iosheet p{font-size:12px;line-height:1.42;color:#3C3C43}
+.iorow{display:flex;align-items:center;gap:9px;padding:9px 16px;border-top:.5px solid #D5D5DA;font-size:13px;color:#000}
+.iorow .sw{margin-left:auto;width:39px;height:23px;border-radius:14px;background:#34C759;position:relative;flex:none}
+.iorow .sw::after{content:'';position:absolute;right:2px;top:2px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.iolink{padding:11px 16px;color:#007AFF;font-size:13.5px;font-weight:500;border-top:.5px solid #D5D5DA}
+.iobtn{display:block;width:100%;padding:13px;background:#007AFF;color:#fff;border-radius:11px;font-size:15px;font-weight:600;margin-top:9px}
+.iobtn.sec{background:#fff;color:#007AFF}
+
+/* ---------- loader (forest) ---------- */
+.scr.dark{background:var(--forest)}
+.scr.dark .scr-body{color:#fff}
+.bigpct{font-family:'Plus Jakarta Sans';font-size:88px;font-weight:800;letter-spacing:-.045em;color:var(--neon);line-height:1;margin-top:24px}
+.loadlines{margin-top:26px;display:flex;flex-direction:column;gap:9px}
+.lline{display:flex;align-items:center;gap:9px;font-size:12.5px;color:rgba(255,255,255,.55);opacity:0;transform:translateY(5px);transition:.4s ease}
+.lline.on{opacity:1;transform:none;color:rgba(255,255,255,.92)}
+.lline .ck{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);flex:none;display:grid;place-items:center}
+.lline.on .ck{background:var(--neon);border-color:var(--neon)}
+.lline b{font-weight:600;color:#fff}
+.loadfoot{text-align:center;font-size:12.5px;color:var(--neon);padding-bottom:6px}
+
+/* ---------- payoff ---------- */
+.chart{height:152px;display:flex;flex-direction:column;margin:2px 0 18px}
+.chart svg{width:100%;flex:1;min-height:0;overflow:visible}
+.chart .months{flex:none;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:8px}
+.kicker{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.bignum{font-family:'Plus Jakarta Sans';font-size:44px;font-weight:800;letter-spacing:-.035em;color:var(--ink);line-height:1}
+.pill{display:inline-block;background:var(--green);color:var(--green-ink);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:700;margin-top:9px}
+.fromyou{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:16px}
+.fromyou .kicker{margin-bottom:9px}
+.fyrow{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.fyrow:last-child{border-bottom:none}
+.fyrow span{color:var(--muted);flex:none}
+.fyrow b{font-weight:600;color:var(--ink);text-align:right}
+
+/* ---------- value screens ---------- */
+.ring{position:relative;width:104px;height:104px;margin:0 auto}
+.ringlabel{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ringlabel .n{font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.03em}
+.ringlabel .s{font-size:9px;color:var(--muted);font-weight:600}
+.tagnew{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.tagnew em{font-style:normal;background:var(--green);color:var(--green-ink);border-radius:4px;padding:2px 5px;letter-spacing:.06em}
+.floatchip{position:absolute;background:var(--white);border-radius:9px;padding:7px 11px;font-size:11.5px;font-weight:600;color:var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.15);display:flex;align-items:center;gap:6px}
+
+/* ---------- paywall ---------- */
+.pw-x{position:absolute;top:56px;right:18px;z-index:20;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.pw-head{font-family:'Plus Jakarta Sans';font-size:21px;line-height:1.24;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:2px 0 4px}
+.goalchip{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.goalchip i{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none}
+.claimline{font-size:12.5px;color:#3E4844;margin-bottom:14px}
+.cmp{background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.cmp .ch{display:grid;grid-template-columns:1fr 60px 78px;background:#F4EBE4;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cmp .ch div{padding:8px 10px;text-align:center}
+.cmp .ch div:first-child{text-align:left}
+.cmp .ch .pr{background:var(--green);color:var(--green-ink)}
+.cmp .cr{display:grid;grid-template-columns:1fr 60px 78px;border-top:1px solid var(--line);font-size:12.5px;align-items:center}
+.cmp .cr div{padding:10px}
+.cmp .cr div:first-child{color:var(--ink);font-weight:500}
+.cmp .cr div:not(:first-child){display:grid;place-items:center}
+.cmp .cr .pr{background:rgba(53,224,106,.09)}
+.offbar{background:var(--green);color:var(--green-ink);border-radius:8px;padding:9px;text-align:center;font-size:12.5px;font-weight:700;margin:14px 0 10px}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;align-items:end}
+.plan{background:var(--white);border:1.5px solid var(--line);border-radius:10px;padding:11px 6px 10px;text-align:center;position:relative;transition:.15s}
+.plan .pn{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.plan .pp{font-family:'Plus Jakarta Sans';font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.plan .po{font-size:11px;color:#A79C94;text-decoration:line-through;margin-top:1px}
+.plan .pm{font-size:9.5px;color:var(--muted);margin-top:7px;padding-top:6px;border-top:1px solid var(--line);line-height:1.3}
+.plan.sel{border-color:var(--green);background:#F3FFF6;box-shadow:0 0 0 3px rgba(53,224,106,.16)}
+.plan.sel .pp{font-size:17px}
+.plan .tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--green-ink);font-size:8.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.plan.tall{padding-top:15px;padding-bottom:13px}
+.proofstrip{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:12px 0 2px}
+.proofstrip b{color:var(--ink);font-weight:700}
+.proofstrip .sep{width:3px;height:3px;border-radius:50%;background:#C8BDB5}
+.secured{display:flex;align-items:center;justify-content:center;gap:5px;font-size:9.5px;color:var(--muted);margin-top:9px;text-align:center;line-height:1.35}
+.legalrow{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.privacy{text-align:center;font-size:10px;color:var(--muted);text-decoration:underline;margin-top:8px}
+
+/* award paywall header */
+.awardhead{position:relative;border-radius:var(--r-media);overflow:hidden;height:190px;background:#1B1410}
+.awardhead img{width:100%;height:100%;object-fit:cover;opacity:.92}
+.awardbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;gap:22px;padding:12px;color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.awardbar div{display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2;text-align:center}
+.awardquote{position:absolute;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff}
+.awardquote .stars{color:#FFB400;margin:0 0 5px}
+.awardquote p{font-size:12px;line-height:1.45}
+.awardquote cite{font-style:normal;font-size:10.5px;opacity:.8;display:block;margin-top:5px}
+
+/* offer paywall / trial timeline */
+.scr.offer{background:var(--cream)}
+.tl{margin:4px 0 14px;position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:8px;top:10px;bottom:16px;width:2px;background:linear-gradient(var(--green),var(--line))}
+.tlrow{position:relative;padding:0 0 18px}
+.tlrow .nd{position:absolute;left:-28px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--white);border:2px solid var(--green);display:grid;place-items:center}
+.tlrow .nd.grey{border-color:var(--line)}
+.tlrow h5{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.tlrow p{font-size:12px;line-height:1.45;color:#4A544F}
+.offerbox{background:var(--white);border:1.5px solid var(--green);border-radius:12px;padding:13px;text-align:center;box-shadow:0 0 0 3px rgba(53,224,106,.14)}
+.offerbox .pp{font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+.downsell{text-align:center;font-size:12px;color:var(--muted);margin-top:11px;text-decoration:underline;display:block;width:100%}
+
+/* auth */
+.authhero{position:absolute;inset:0}
+.authhero img{width:100%;height:100%;object-fit:cover}
+.authhero::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.15) 30%,rgba(0,0,0,.82))}
+.authcopy{position:relative;z-index:2;color:#fff;margin-top:auto}
+.authcopy h2{font-family:'Plus Jakarta Sans';font-size:27px;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:6px}
+.authcopy p{font-size:13px;opacity:.9}
+.authbtn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;border:none;border-bottom:1px solid var(--line);background:none;padding:6px 0;font-size:15px;font-family:'Inter';color:var(--ink);outline:none}
+.field input:focus{border-color:var(--green)}
+.fine{font-size:10.5px;line-height:1.5;color:var(--muted);text-align:center}
+.fine a{text-decoration:underline}
+
+/* jump chips */
+.chips{width:100%;max-width:760px}
+.chips h6{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7A838B;margin-bottom:9px;text-align:center}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{padding:7px 13px;border-radius:20px;border:1px solid #2C3136;background:#1B1F22;font-size:12px;font-weight:600;color:#B9C1C8;transition:.14s}
+.chip:hover{border-color:#404850;color:#fff}
+.chip.on{background:var(--green);border-color:var(--green);color:#07130B}
+.chip.hot{border-color:#3F6B4E;color:#8DEBA9}
+.chip.hot.on{background:var(--green);color:#07130B}
+.prefilled{text-align:center;font-size:11px;color:#6E767D;margin-top:9px}
+.prefilled b{color:#9AEDB6}
+
+/* ---------- side panel ---------- */
+.pan{padding:26px 28px 60px}
+.pan .step{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--panel-muted)}
+.pan h3{font-family:'Plus Jakarta Sans';font-size:22px;font-weight:700;letter-spacing:-.022em;margin:6px 0 4px;color:var(--panel-ink)}
+.tagline{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 20px}
+.tg{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:5px}
+.tg.kept{background:#E8F7ED;color:#146B31}
+.tg.merged{background:#EAF0FB;color:#1B4C9B}
+.tg.moved{background:#FDF2E2;color:#8A5410}
+.tg.cut{background:#FBEAEA;color:#94211F}
+.tg.new{background:#F1EAFB;color:#5A2C9B}
+.blk{margin-bottom:20px}
+.blk h4{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--panel-muted);margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.blk h4::before{content:'';width:14px;height:2px;background:var(--accent);border-radius:2px}
+.blk p{font-size:13.5px;line-height:1.62;color:#2E353B}
+.blk p+p{margin-top:9px}
+.impact{background:#F5F8F6;border:1px solid var(--panel-line);border-left:3px solid var(--accent);border-radius:8px;padding:13px 15px}
+.impact .v{font-family:'Plus Jakarta Sans';font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0E7A36}
+.impact .l{font-size:11.5px;color:var(--panel-muted);margin-top:2px}
+.src{font-size:11.5px;line-height:1.55;color:var(--panel-muted);border-top:1px solid var(--panel-line);padding-top:14px;margin-top:22px}
+.src b{color:var(--panel-ink)}
+.src a{color:#1B62C4}
+
+/* ---------- before/after view ---------- */
+.ba{padding:34px 30px 70px;max-width:1500px;margin:0 auto}
+.ba h2{font-family:'Plus Jakarta Sans';font-size:26px;font-weight:700;letter-spacing:-.025em;margin-bottom:6px}
+.ba .lede{color:#9AA2A9;font-size:14px;max-width:760px;margin-bottom:28px;line-height:1.6}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+.col{background:var(--bg-2);border:1px solid #23272B;border-radius:14px;padding:18px}
+.col h3{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7A838B;margin-bottom:4px}
+.col .cnt{font-size:11.5px;color:#5E666D;margin-bottom:14px}
+.sq{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:4px;background:#1F2326;border:1px solid transparent}
+.sq .i{width:20px;flex:none;font-size:10.5px;color:#5E666D;text-align:right}
+.sq .n{flex:1;color:#D2D8DD}
+.sq .t{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:2.5px 6px;border-radius:4px;flex:none}
+.t.kept{background:#14351F;color:#6FD78F}
+.t.merged{background:#132741;color:#7BB4F5}
+.t.moved{background:#3A2A11;color:#EFB55C}
+.t.cut{background:#3B1616;color:#F08585}
+.t.new{background:#271639;color:#C79BF0}
+.sq.isnew{border-color:#3C2A52}
+.sq.iscut{opacity:.5}
+.sq.iscut .n{text-decoration:line-through}
+.gp{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5E666D;margin:16px 0 7px;padding-left:2px}
+.gp:first-child{margin-top:0}
+table.rank{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px;background:var(--bg-2);border-radius:12px;overflow:hidden}
+table.rank th{text-align:left;padding:11px 12px;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#7A838B;background:#1F2326;border-bottom:1px solid #2A2F33}
+table.rank td{padding:12px;border-bottom:1px solid #23272B;vertical-align:top;color:#C6CDD3;line-height:1.5}
+table.rank tr:last-child td{border-bottom:none}
+table.rank .pri{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:4px;white-space:nowrap}
+.pri.p0{background:#3B1616;color:#F08585}
+.pri.p1{background:#3A2A11;color:#EFB55C}
+.pri.p2{background:#132741;color:#7BB4F5}
+.pri.p3{background:#232829;color:#8A9299}
+table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
+.note{background:var(--bg-2);border:1px solid #23272B;border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin-top:26px;font-size:13.5px;line-height:1.65;color:#B9C1C8}
+.note h4{color:#fff;font-size:13px;margin-bottom:7px;font-weight:700}
+.note ul{margin:8px 0 0 18px}
+.note li{margin-bottom:5px}
+.note b{color:#fff}
+
+/* sources modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:none;align-items:center;justify-content:center;padding:24px}
+.modal.on{display:flex}
+.modalbox{background:var(--bg-2);border:1px solid #2C3136;border-radius:14px;max-width:620px;width:100%;max-height:82vh;overflow-y:auto;padding:26px}
+.modalbox h3{font-family:'Plus Jakarta Sans';font-size:19px;margin-bottom:6px}
+.modalbox p{font-size:13px;color:#9AA2A9;margin-bottom:16px;line-height:1.6}
+.modalbox dl{font-size:13px;line-height:1.6}
+.modalbox dt{font-weight:700;color:#fff;margin-top:13px}
+.modalbox dd{color:#A8B0B7}
+.modalbox dd a{color:#7BB4F5;word-break:break-all;font-size:12px}
+.modalclose{margin-top:20px;padding:9px 16px;border:1px solid #3D444A;border-radius:8px;font-size:13px;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">
+    <span class="dot"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#07130B"/></svg></span>
+    <span>Lifesum — onboarding &amp; paywall rebuild<small>Sequence re-ordered · art direction untouched</small></span>
+  </div>
+  <button class="srcbtn" onclick="document.getElementById('srcmodal').classList.add('on')">Sources &amp; grounding</button>
+  <div class="tabs">
+    <button id="tab-proto" class="on" onclick="showView('proto')">Prototype</button>
+    <button id="tab-ba" onclick="showView('ba')">Before → After</button>
+  </div>
+</div>
+
+<!-- ============================ PROTOTYPE ============================ -->
+<div class="view on" id="view-proto">
+<div class="stage">
+  <div class="left">
+    <div class="phone">
+      <div class="screenwrap" id="wrap">
+        <div class="island"></div>
+        <div class="statusbar" id="sbar">
+          <span>9:41</span>
+          <span class="sb-r">
+            <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 10.5 6 8.3a2.9 2.9 0 0 1 4 0l-2 2.2ZM8 5.6c-1.5 0-2.9.6-3.9 1.6L2.7 5.8A7.5 7.5 0 0 1 8 3.6c2 0 3.9.8 5.3 2.2l-1.4 1.4A5.5 5.5 0 0 0 8 5.6ZM8 1.1c-2.7 0-5.2 1.1-7 2.9L-.4 2.6A11.9 11.9 0 0 1 8-.9c3.3 0 6.3 1.3 8.4 3.5L15 4a9.9 9.9 0 0 0-7-2.9Z"/></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="20" height="11" rx="3.2" stroke="currentColor" opacity=".38"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><path d="M22 4v4a2.5 2.5 0 0 0 0-4Z" fill="currentColor" opacity=".5"/></svg>
+          </span>
+        </div>
+
+<!-- 1 · INTRO 1 -->
+<section class="scr" data-id="intro1">
+  <div class="scr-top bare"></div>
+  <div class="scr-body col">
+    <div class="media">
+      <img src="img/p-cook.png" alt="">
+      <div class="badge-fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></div>
+      <div class="callout"><span class="lf"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></span><span>Great choice! This meal will give you steady energy throughout the day</span></div>
+    </div>
+    <h2 class="h1" style="margin-top:22px">Nutrition is your superpower for change</h2>
+    <p class="sub">What you eat shapes your energy, mood, and how you show up every day.</p>
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 2 · INTRO 2 -->
+<section class="scr" data-id="intro2">
+  <div class="scr-top bare"></div>
+  <div class="scr-body col">
+    <div class="media"><img src="img/p-eat.png" alt=""></div>
+    <h2 class="h1" style="margin-top:22px">Starting here, exactly as you are, is enough.</h2>
+    <p class="sub">We have what you need to succeed.</p>
+    <div class="dots"><i></i><i class="on"></i><i></i></div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 3 · PROOF -->
+<section class="scr" data-id="proof">
+  <div class="scr-top bare"></div>
+  <div class="scr-body col">
+    <div class="tiles">
+      <div class="tile appstore">
+        <div class="tl"><svg width="11" height="13" viewBox="0 0 16 19" fill="#fff"><path d="M13 10c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8C3.7 5 2.2 5.9 1.4 7.3c-1.6 2.8-.4 7 1.1 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.5-3.9ZM10.8 3.4c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.4Z"/></svg> AppStore</div>
+        <div class="tt">APP<br>OF THE<br>DAY</div>
+      </div>
+      <div class="tile users">
+        <div class="tt" style="font-size:26px;margin-top:auto">65+<br>Million<br>users</div>
+        <div class="tl" style="margin-top:8px"><svg width="13" height="13" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></div>
+      </div>
+    </div>
+    <div class="laurel">
+      <svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5M11 11c-3 0-4 2-4 4"/></svg>
+      Editor&rsquo;s choice
+      <svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4" style="transform:scaleX(-1)"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5M11 11c-3 0-4 2-4 4"/></svg>
+    </div>
+    <div class="revcard">
+      <div class="revhead">Thank you Lifesum <span>Sep 4</span></div>
+      <div class="stars">★★★★★<span style="float:right;font-size:10.5px;color:#6F6A66;letter-spacing:0">Michelle Z.</span></div>
+      <p class="revtxt">&ldquo;This meal logging tool is fantastic; it has improved my routine and the visibility of the nutrients in my meals by 100%!&rdquo;</p>
+      <div class="revfoot"><span>151K RATINGS</span><span>4.6 ★★★★★</span></div>
+    </div>
+    <h2 class="h1 sm" style="margin-top:18px">Millions are choosing steady progress</h2>
+    <p class="sub">&ndash; not quick fixes. Just like you</p>
+    <div class="dots"><i></i><i></i><i class="on"></i></div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 4 · CONSENT -->
+<section class="scr" data-id="consent">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:4%"></i></div></div>
+  <div class="scr-body">
+    <div class="iconfield">
+      <span class="glyph" style="left:12%;top:18%">⌁</span><span class="glyph" style="left:33%;top:12%">☺</span><span class="glyph" style="left:58%;top:14%">⚖</span><span class="glyph" style="left:80%;top:18%">▦</span>
+      <span class="glyph" style="left:9%;top:52%">◷</span><span class="glyph" style="left:28%;top:46%">▤</span><span class="glyph" style="left:68%;top:46%">◯</span><span class="glyph" style="left:86%;top:52%">✿</span>
+      <span class="glyph" style="left:14%;top:80%">✿</span><span class="glyph" style="left:36%;top:84%">▦</span><span class="glyph" style="left:62%;top:84%">⌁</span><span class="glyph" style="left:84%;top:80%">▦</span>
+      <span class="center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#35E06A" stroke-width="2.6" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span>
+    </div>
+    <h2 class="h1">Consent Level 1 Lifesum AB</h2>
+    <div class="consentbody">
+      <p>I would like to receive personalized nutrition guidance and recommendations to support my well-being.</p>
+      <p>I understand that Lifesum AB will process my personal data to provide these services, as described in the <u>declaration of consent</u> and <u>Privacy Policy</u>.</p>
+      <p>I can withdraw my consent at any time. If I do, Lifesum will stop using my data, except where it is required to keep for legal reasons.</p>
+    </div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">I consent</button></div>
+</section>
+
+<!-- 5 · GOAL (merged) -->
+<section class="scr" data-id="goal">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:12%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">What brings you here today?</h2>
+    <div data-group="goal" data-mode="single">
+      <button class="opt sel" data-v="Lose weight">Lose weight<span class="tick">✓</span></button>
+      <button class="opt" data-v="Build muscle">Build muscle<span class="tick">✓</span></button>
+      <button class="opt" data-v="More energy">More energy<span class="tick">✓</span></button>
+      <button class="opt" data-v="Longevity">Longevity<span class="tick">✓</span></button>
+      <button class="opt" data-v="Eat better">Eat better<span class="tick">✓</span></button>
+      <button class="opt" data-v="GLP-1 support">GLP-1 support<span class="tick">✓</span></button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">This helps us personalize your daily recommendations</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 6 · ALSO IMPORTANT -->
+<section class="scr" data-id="also">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:20%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">Choose what else is important to you</h2>
+    <div data-group="also" data-mode="multi">
+      <button class="opt" data-v="More daily energy">More daily energy<span class="tick">✓</span></button>
+      <button class="opt sel" data-v="Stabilize my mood">Stabilize my mood<span class="tick">✓</span></button>
+      <button class="opt sel" data-v="Better fitting clothes">Better fitting clothes<span class="tick">✓</span></button>
+      <button class="opt" data-v="Create better structure">Create better structure<span class="tick">✓</span></button>
+      <button class="opt" data-v="Learn to cook great food">Learn to cook great food<span class="tick">✓</span></button>
+      <button class="opt" data-v="Feel mentally sharp">Feel mentally sharp<span class="tick">✓</span></button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">This helps us personalize your daily recommendations</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 7 · GENDER -->
+<section class="scr" data-id="gender">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:28%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">What gender were you born with?</h2>
+    <div data-group="gender" data-mode="single" style="display:flex;gap:10px;margin-top:22px">
+      <button class="opt wide2" data-v="Male">Male</button>
+      <button class="opt wide2 sel" data-v="Female">Female</button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">Your gender is used to calculate nutritional needs. It helps us adjust your plan accordingly.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 8 · DOB -->
+<section class="scr" data-id="dob">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:36%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">When were you born?</h2>
+    <div class="wheel" data-wheel="dob"><div class="bar"></div>
+      <div class="wcol" data-col="day"></div><div class="wcol" data-col="mon"></div><div class="wcol" data-col="year"></div>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">We ask this because your age influences your energy needs. It helps us adjust your plan accordingly.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 9 · HEIGHT -->
+<section class="scr" data-id="height">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:44%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">How tall are you?</h2>
+    <div class="wheel" data-wheel="height"><div class="bar"></div>
+      <div class="wcol" data-col="h1"></div><div class="wcol" data-col="h2"></div><div class="wcol" data-col="hu"></div>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">We use your height to better understand your body&rsquo;s needs and adjust your plan accordingly.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 10 · WEIGHT -->
+<section class="scr" data-id="weight">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:52%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">How much do you weigh now?</h2>
+    <div class="wheel" data-wheel="weight"><div class="bar"></div>
+      <div class="wcol" data-col="w1"></div><div class="wcol" data-col="w2"></div><div class="wcol" data-col="wu"></div>
+    </div>
+    <div id="startcard" style="display:none;background:var(--lilac);border-radius:12px;padding:18px;text-align:center;margin-top:6px">
+      <div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:17px;letter-spacing:-.02em;margin-bottom:6px">Great&mdash;we&rsquo;ve got your starting point.</div>
+      <div style="font-size:12.5px;line-height:1.5;color:#3E2A40">This helps us make your recommendations feel more realistic and personal.</div>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">Your current weight helps us understand your starting point and adjust your plan accordingly.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 11 · GOAL WEIGHT -->
+<section class="scr" data-id="goalweight">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:60%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">What is your goal weight?</h2>
+    <div class="wheel" data-wheel="goalweight"><div class="bar"></div>
+      <div class="wcol" data-col="g1"></div><div class="wcol" data-col="g2"></div><div class="wcol" data-col="gu"></div>
+    </div>
+    <div style="text-align:center;margin-top:4px"><span class="goalchip" id="deltachip"><i></i>7 kg to go</span></div>
+  </div>
+  <div class="scr-foot"><p class="helper">This helps us personalize your daily recommendations</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 12 · CHALLENGES -->
+<section class="scr" data-id="challenge">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:70%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">What feels challenging about your eating habits?</h2>
+    <div data-group="challenges" data-mode="multi">
+      <button class="opt" data-v="Keeping a routine">Keeping a routine<span class="tick">✓</span></button>
+      <button class="opt sel" data-v="Planning what to eat">Planning what to eat<span class="tick">✓</span></button>
+      <button class="opt sel" data-v="Managing cravings">Managing cravings<span class="tick">✓</span></button>
+      <button class="opt" data-v="Eating the right amount">Eating the right amount<span class="tick">✓</span></button>
+      <button class="opt" data-v="Finding recipe ideas">Finding recipe ideas<span class="tick">✓</span></button>
+      <button class="opt" data-v="Making good food choices">Making good food choices<span class="tick">✓</span></button>
+      <button class="opt" data-v="Feeling supported">Feeling supported<span class="tick">✓</span></button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">This helps us personalize your daily recommendations</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 13 · ACTIVITY -->
+<section class="scr" data-id="activity">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:80%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">What is your typical day like?</h2>
+    <div data-group="activity" data-mode="single">
+      <button class="opt" data-v="Sedentary">Sedentary<span class="tick">✓</span></button>
+      <button class="opt" data-v="Lightly active">Lightly active<span class="tick">✓</span></button>
+      <button class="opt sel" data-v="Moderately active">Moderately active<span class="tick">✓</span></button>
+      <button class="opt" data-v="Very active">Very active<span class="tick">✓</span></button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">This helps us personalize your daily recommendations</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 14 · PACE -->
+<section class="scr" data-id="pace">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:92%"></i></div></div>
+  <div class="scr-body" style="display:flex;flex-direction:column;justify-content:center">
+    <h2 class="h1" style="margin-bottom:auto">What pace works for you?</h2>
+    <div style="margin:auto 0">
+      <div style="text-align:center;margin-bottom:6px">
+        <div style="font-family:'Plus Jakarta Sans';font-size:26px;font-weight:800;letter-spacing:-.03em" id="paceval">1kg/week</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px" id="pacelbl">Focused commitment</div>
+      </div>
+      <input type="range" id="pacerange" min="0" max="3" step="1" value="3" style="width:100%;accent-color:#0A3A2A;margin-top:14px">
+    </div>
+    <div style="margin-top:auto"></div>
+  </div>
+  <div class="scr-foot"><p class="helper" id="pacehelp">Faster results through structure and intention&mdash;you&rsquo;re in charge of the pace. <u>Sources of recommendations</u></p><button class="btn" data-go="next">Build my plan</button></div>
+</section>
+
+<!-- 15 · LOADER -->
+<section class="scr dark" data-id="loader">
+  <div class="scr-top bare"></div>
+  <div class="scr-body">
+    <div class="bigpct" id="pct">0%</div>
+    <div class="loadlines" id="loadlines"></div>
+  </div>
+  <div class="scr-foot on-dark"><div class="loadfoot">Finalizing your plan</div></div>
+</section>
+
+<!-- 16 · PAYOFF -->
+<section class="scr" data-id="payoff">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:100%"></i></div></div>
+  <div class="scr-body">
+    <div class="chart">
+      <svg viewBox="0 0 300 120" preserveAspectRatio="none">
+        <path d="M0,14 C60,16 88,54 130,74 C170,93 220,100 300,102" fill="none" stroke="#35E06A" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="196" cy="97" r="7" fill="#0A3A2A"/>
+        <rect x="214" y="88" width="34" height="18" rx="9" fill="#fff" stroke="#0A3A2A" stroke-width="2"/>
+      </svg>
+      <div class="months" id="chartmonths"><span>Oct</span><span>Nov</span><span>Dec</span></div>
+    </div>
+    <div class="kicker">Your goal weight</div>
+    <div class="bignum" id="goalbig">50 kg</div>
+    <div><span class="pill">You can do it!</span></div>
+    <div class="kicker" style="margin-top:22px">Your personalized plan</div>
+    <h2 class="h1 sm" style="margin-top:2px" id="payofftitle">Julia, you will reach your goal by 11 November</h2>
+    <div class="fromyou">
+      <div class="kicker">Built from your answers</div>
+      <div class="fyrow"><span>Main goal</span><b id="fy-goal">Lose weight</b></div>
+      <div class="fyrow"><span>Also matters</span><b id="fy-also">Stabilize my mood, Better fitting clothes</b></div>
+      <div class="fyrow"><span>Start &rarr; target</span><b id="fy-w">57 kg &rarr; 50 kg</b></div>
+      <div class="fyrow"><span>Pace</span><b id="fy-pace">1 kg / week</b></div>
+      <div class="fyrow"><span>Activity</span><b id="fy-act">Moderately active</b></div>
+      <div class="fyrow"><span>We&rsquo;ll help most with</span><b id="fy-ch">Planning what to eat, Managing cravings</b></div>
+      <div class="fyrow"><span>Daily target</span><b>1,712 kcal</b></div>
+    </div>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Continue</button></div>
+</section>
+
+<!-- 17 · VALUE 1 -->
+<section class="scr" data-id="value1">
+  <div class="scr-top bare"></div>
+  <div class="scr-body">
+    <div style="position:relative;margin-bottom:18px">
+      <div class="media short"><img src="img/p-rating.png" alt=""></div>
+      <div style="position:absolute;left:-2px;top:-8px;width:56px;height:56px;border-radius:50%;background:#35E06A;display:grid;place-items:center;font-family:'Plus Jakarta Sans';font-size:23px;font-weight:800;color:#0B2B18;box-shadow:0 6px 18px rgba(0,0,0,.18)">9</div>
+      <div class="floatchip" style="left:8px;bottom:44px">+ Good source of fiber</div>
+      <div class="floatchip" style="left:26px;bottom:8px">+ Low in sugar</div>
+    </div>
+    <div class="callout" style="position:static;right:auto;box-shadow:none;border:1px solid var(--line);margin-bottom:20px">
+      <span class="lf"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></span>
+      <span>This is a quality lunch with excellent protein that supports your weight goal, and it&rsquo;s made from whole, minimally processed ingredients.</span>
+    </div>
+    <div class="tagnew">Food rating <em>New</em></div>
+    <h2 class="h1 sm" style="margin-top:8px">Real insights about what is on your plate</h2>
+    <p class="sub">Snap a meal &mdash; it&rsquo;s like magic. Photo, voice, text or barcode, whichever is fastest.</p>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Continue</button></div>
+</section>
+
+<!-- 18 · VALUE 2 -->
+<section class="scr" data-id="value2">
+  <div class="scr-top bare"></div>
+  <div class="scr-body">
+    <div style="position:relative;margin-bottom:16px">
+      <div class="media short"><img src="img/p-ring.png" alt=""></div>
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)">
+        <div class="ring">
+          <svg viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+            <circle cx="50" cy="50" r="43" fill="rgba(255,255,255,.82)" stroke="#E3D8D0" stroke-width="7"/>
+            <circle cx="50" cy="50" r="43" fill="none" stroke="#35E06A" stroke-width="7" stroke-linecap="round" stroke-dasharray="135 270"/>
+          </svg>
+          <div class="ringlabel"><div><div class="s">Remaining</div><div class="n">856</div><div class="s">goal 1,712 kcal</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="position:static;right:auto;box-shadow:none;border:1px solid var(--line);margin-bottom:20px">
+      <span class="lf"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></span>
+      <span><b>Good morning!</b> Two weeks in and you&rsquo;re doing great! However, you ran a bit low on protein yesterday. Remember that protein is important to gain and maintain muscles when you&rsquo;re trying to lose weight.</span>
+    </div>
+    <div class="tagnew">Personalized guidance <em>New</em></div>
+    <h2 class="h1 sm" style="margin-top:8px">Get instant feedback on your choices</h2>
+    <p class="sub">Progress gets easier when the goal is simple.</p>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="next">Continue</button></div>
+</section>
+
+<!-- 19 · PAYWALL -->
+<section class="scr" data-id="paywall">
+  <button class="pw-x" data-go="offer"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#0D1512" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg></button>
+  <div class="scr-top bare" style="padding-bottom:0"></div>
+  <div class="scr-body">
+    <span class="goalchip" id="pwchip"><i></i>Lose weight &middot; 57 &rarr; 50 kg</span>
+    <h2 class="pw-head" id="pwhead">Julia, reach 50 kg by 10 Nov &mdash; and stay there</h2>
+    <p class="claimline">Be <b>5x more likely</b> to achieve lasting results with Premium.</p>
+
+    <div class="cmp">
+      <div class="ch"><div>&nbsp;</div><div>Free</div><div class="pr">Premium</div></div>
+      <div class="cr"><div>Barcode scanner</div><div>&mdash;</div><div class="pr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></div></div>
+      <div class="cr"><div>AI Smart Tracking</div><div>&mdash;</div><div class="pr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></div></div>
+      <div class="cr"><div>1000+ Premium Recipes</div><div>&mdash;</div><div class="pr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></div></div>
+      <div class="cr"><div>Adjust Your Macros &amp; Calories</div><div>&mdash;</div><div class="pr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></div></div>
+      <div class="cr"><div>Create Your Own Meals</div><div>&mdash;</div><div class="pr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></div></div>
+    </div>
+
+    <div class="awardhead" style="margin-top:14px;height:128px">
+      <img src="img/p-stretch.png" alt="">
+      <div class="awardbar">
+        <div><svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5"/></svg>App of<br>the day</div>
+        <div><svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5"/></svg>Editors&rsquo;<br>choice</div>
+      </div>
+      <div class="awardquote">
+        <div class="stars">★★★★★</div>
+        <p>&ldquo;It&rsquo;s so easy to use and I love that I can still eat the foods I love within reason.&rdquo;</p>
+        <cite>by Anabelle, US</cite>
+      </div>
+    </div>
+
+    <div class="offbar">50% off Premium</div>
+    <div class="plans" data-group="plan" data-mode="single">
+      <button class="plan" data-v="1m"><div class="pn">1<br>month</div><div class="pp">$7.49</div><div class="po">$14.99</div><div class="pm">$7.49 / month<br>billed monthly</div></button>
+      <button class="plan tall sel" data-v="12m"><span class="tag">Most popular</span><div class="pn">12<br>months</div><div class="pp">$49.99</div><div class="po">$99.99</div><div class="pm">$4.16 / month<br>billed yearly</div></button>
+      <button class="plan" data-v="3m"><div class="pn">3<br>months</div><div class="pp">$14.99</div><div class="po">$30.00</div><div class="pm">$5.00 / month<br>billed quarterly</div></button>
+    </div>
+
+    <div class="proofstrip">
+      <span><b>4.6</b> ★★★★★</span><span class="sep"></span>
+      <span><b>151K</b> ratings</span><span class="sep"></span>
+      <span><b>Editors&rsquo; Choice</b></span>
+    </div>
+  </div>
+  <!-- DOCKED FOOTER — outside .scr-body, nothing floats over the scroll -->
+  <div class="scr-foot">
+    <button class="btn" data-go="next" id="pwcta">Continue &mdash; $49.99 / year</button>
+    <div class="secured"><svg width="9" height="11" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="6" width="10" height="7" rx="1.6"/><path d="M3.4 6V4a2.6 2.6 0 0 1 5.2 0v2"/></svg> Secured with App Store. Auto-renewable billing. Cancel anytime. No hidden fees.</div>
+    <div class="legalrow"><span>Restore purchase</span><span>Redeem code</span></div>
+    <div class="privacy">Privacy &amp; Terms</div>
+  </div>
+</section>
+
+<!-- 20 · OFFER PAYWALL (sheet, on close) -->
+<section class="scr sheet offer" data-id="offer">
+  <button class="pw-x" data-go="skipoffer"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#0D1512" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg></button>
+  <div class="scr-top bare" style="padding-bottom:0"></div>
+  <div class="scr-body">
+    <span class="goalchip"><i></i>Your plan is saved</span>
+    <h2 class="pw-head">Not ready to pay? Start the free trial instead.</h2>
+    <p class="claimline" id="offersub">You&rsquo;re 7 kg from 50 kg. See week one of your plan before you&rsquo;re charged anything.</p>
+
+    <div class="tl">
+      <div class="tlrow">
+        <span class="nd"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span>
+        <h5>Today &mdash; $0 charged</h5>
+        <p>Full Premium unlocks: AI Smart Tracking, barcode scanner, 1000+ recipes, your 1,712 kcal plan.</p>
+      </div>
+      <div class="tlrow">
+        <span class="nd"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0A7D35" stroke-width="4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span>
+        <h5>Before your trial ends</h5>
+        <p>We send a reminder so nothing charges by surprise. Cancel in two taps in the App Store.</p>
+      </div>
+      <div class="tlrow">
+        <span class="nd grey"></span>
+        <h5>After the trial</h5>
+        <p>$49.99 for 12 months &mdash; $4.16 / month. Renews yearly, cancel anytime.</p>
+      </div>
+    </div>
+
+    <div class="offerbox">
+      <div class="pn" style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">12 MONTHS &middot; FREE TRIAL FIRST</div>
+      <div class="pp">$49.99</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px">$4.16 / month after the trial &middot; <s>$99.99</s></div>
+    </div>
+
+    <div class="proofstrip" style="margin-top:14px">
+      <span><b>4.6</b> ★★★★★</span><span class="sep"></span>
+      <span><b>151K</b> ratings</span><span class="sep"></span>
+      <span><b>Editors&rsquo; Choice</b></span>
+    </div>
+  </div>
+  <div class="scr-foot">
+    <button class="btn" data-go="skipoffer">Start my free trial</button>
+    <button class="downsell" data-go="skipoffer">Or just 1 month for $7.49</button>
+    <div class="secured" style="margin-top:8px"><svg width="9" height="11" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="6" width="10" height="7" rx="1.6"/><path d="M3.4 6V4a2.6 2.6 0 0 1 5.2 0v2"/></svg> Secured with App Store. Cancel anytime before the trial ends and you pay nothing.</div>
+  </div>
+</section>
+
+<!-- 21 · ACCOUNT (moved after the paywall) -->
+<section class="scr" data-id="account">
+  <div class="scr-top bare" style="padding-bottom:0"></div>
+  <div class="scr-body" style="padding-bottom:6px">
+    <h2 class="h1" style="margin-top:0">Create your account</h2>
+    <p class="sub">Your plan is already built. This just saves it to your devices.</p>
+    <div class="field"><label>First name</label><input value="Julia"></div>
+    <div class="field"><label>Email</label><input value="julia@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" value="........" placeholder="Minimum of 8 characters"></div>
+    <button class="authbtn btn dark" style="margin-top:6px"><svg width="14" height="16" viewBox="0 0 16 19" fill="#fff"><path d="M13 10c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8C3.7 5 2.2 5.9 1.4 7.3c-1.6 2.8-.4 7 1.1 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.5-3.9ZM10.8 3.4c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.4Z"/></svg> Continue with Apple</button>
+    <button class="authbtn btn outline">Continue with Google</button>
+  </div>
+  <div class="scr-foot"><p class="fine">By continuing, you agree to Lifesum&rsquo;s <a>Terms &amp; Conditions</a> and <a>Privacy Policy</a>.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 22 · APPLE HEALTH (moved after the paywall) -->
+<section class="scr" data-id="health">
+  <div class="scr-top bare"></div>
+  <div class="scr-body">
+    <div class="iconfield" style="background:radial-gradient(circle at 50% 50%,#9BF5B8 0%,#DDF8E4 48%,var(--cream) 80%);height:170px">
+      <div class="logotiles">
+        <div class="logotile" style="font-size:24px">❤️</div>
+        <div class="logotile" style="background:#F1EDE9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A3A2A" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg></div>
+        <div class="logotile brand"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></div>
+      </div>
+    </div>
+    <h2 class="h1">Connect Apple Health</h2>
+    <p class="sub">Speed up registration and improve your experience with tailored recommendations. Synchronise your activity, weight and sleep data with Lifesum automatically. Works with Oura, Withings and Runkeeper through Health.</p>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="iosheet">Connect</button></div>
+</section>
+
+<!-- 22b · iOS SYSTEM SHEET (their screen, kept untouched) -->
+<section class="scr sheet" data-id="iosheet" style="background:rgba(0,0,0,.35)">
+  <div class="scr-top bare"></div>
+  <div class="scr-body" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:0">
+    <div class="iosheet">
+      <div class="ih">Health Access</div>
+      <div class="ib">
+        <div class="ico">❤️</div>
+        <h4>Health</h4>
+        <p>&ldquo;Lifesum&rdquo; would like to access and update your Health data.</p>
+      </div>
+      <div class="iolink">Turn Off All</div>
+      <div style="padding:9px 16px 3px;font-size:10.5px;color:#6D6D72;text-transform:none">Allow &ldquo;Lifesum&rdquo; to read</div>
+      <div class="iorow">🔥 Active Energy<span class="sw"></span></div>
+      <div class="iorow">🎂 Date of Birth<span class="sw"></span></div>
+      <div class="iorow">🔥 Exercise Minutes<span class="sw"></span></div>
+      <div class="iorow">🚶 Height<span class="sw"></span></div>
+    </div>
+  </div>
+  <div class="scr-foot" style="background:transparent;padding-top:0">
+    <button class="iobtn" data-go="afterios">Allow</button>
+    <button class="iobtn sec" data-go="afterios">Don&rsquo;t Allow</button>
+  </div>
+</section>
+
+<!-- 23 · DISCOVER (moved after the paywall) -->
+<section class="scr" data-id="discover">
+  <div class="scr-top"><span class="back" data-go="back"><svg width="10" height="17" viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 1 1.5 8.5 8.5 16"/></svg></span><div class="prog"><i style="width:100%"></i></div></div>
+  <div class="scr-body">
+    <h2 class="h1">How did you discover Lifesum?</h2>
+    <div data-group="discover" data-mode="single">
+      <button class="opt" data-v="Search">Search<span class="tick">✓</span></button>
+      <button class="opt" data-v="Instagram">Instagram<span class="tick">✓</span></button>
+      <button class="opt" data-v="TikTok">TikTok<span class="tick">✓</span></button>
+      <button class="opt" data-v="Influencer / creator">Influencer / creator<span class="tick">✓</span></button>
+      <button class="opt" data-v="Podcast">Podcast<span class="tick">✓</span></button>
+      <button class="opt" data-v="Friend or family">Friend or family<span class="tick">✓</span></button>
+      <button class="opt" data-v="App Store feature or charts">App Store feature or charts<span class="tick">✓</span></button>
+      <button class="opt" data-v="I already knew Lifesum">I already knew Lifesum<span class="tick">✓</span></button>
+      <button class="opt" data-v="Other">Other<span class="tick">✓</span></button>
+    </div>
+  </div>
+  <div class="scr-foot"><p class="helper">Optional &mdash; it helps us know where to find more people like you.</p><button class="btn" data-go="next">Next</button></div>
+</section>
+
+<!-- 24 · DONE -->
+<section class="scr" data-id="done">
+  <div class="scr-top bare"></div>
+  <div class="scr-body" style="display:flex;flex-direction:column;justify-content:center;text-align:center">
+    <div style="width:74px;height:74px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin:0 auto 22px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0B2B18" stroke-width="3" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg>
+    </div>
+    <h2 class="h1" style="text-align:center">You&rsquo;re set, Julia.</h2>
+    <p class="sub" style="text-align:center">Today&rsquo;s target is 1,712 kcal. Snap your first meal and we&rsquo;ll rate it in seconds.</p>
+  </div>
+  <div class="scr-foot"><button class="btn" data-go="restart">Track my first meal</button></div>
+</section>
+
+      </div><!-- /screenwrap -->
+    </div><!-- /phone -->
+
+    <div class="chips">
+      <h6>Jump to any stage &mdash; answers pre-filled</h6>
+      <div class="chiprow" id="chiprow"></div>
+      <div class="prefilled">Pre-filled as <b>Julia &middot; lose weight &middot; 57&rarr;50 kg &middot; 1 kg/week &middot; moderately active</b></div>
+    </div>
+  </div>
+
+  <div class="right"><div class="pan" id="pan"></div></div>
+</div>
+</div>
+
+<!-- ============================ BEFORE → AFTER ============================ -->
+<div class="view" id="view-ba">
+  <div class="ba">
+    <h2>Before → After</h2>
+    <p class="lede">Every screen in the shipping flow is accounted for. Nothing in the art direction changed — same cream surface, same green control, same wheel pickers, same footer chrome, same comparison table. The sequence is what moved.</p>
+    <div class="cols">
+      <div class="col">
+        <h3>Before — shipping flow</h3>
+        <div class="cnt" id="cntb"></div>
+        <div id="listb"></div>
+      </div>
+      <div class="col">
+        <h3>After — rebuilt sequence</h3>
+        <div class="cnt" id="cnta"></div>
+        <div id="lista"></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:44px">Ranked changes</h2>
+    <p class="lede">Ordered by expected impact × confidence. Ranges are Adapty's expected effect from teardowns and A/B tests across subscription apps — not measured lift for Lifesum.</p>
+    <table class="rank">
+      <thead><tr><th style="width:34px">#</th><th style="width:84px">Priority</th><th style="width:190px">Pattern</th><th>What changed in your flow</th><th style="width:132px">Expected impact</th></tr></thead>
+      <tbody id="ranktb"></tbody>
+    </table>
+
+    <div class="note">
+      <h4>What I cut, and why</h4>
+      <ul>
+        <li><b>“How do you feel about your weight?”</b> — merged into “What brings you here today?”. It is the same question one screen apart: the first asks the intent, the second asks the intent again with more options. One screen of drop-off for a duplicate answer. <b>Want it back?</b> Say so — it is already wired: it would set a <i>tone</i> variable (“wants muscle” / “wants loss” / “wants maintenance”) that renders on the loader line 2 and as its own row in the “Built from your answers” block on the payoff screen, then swaps the paywall’s lead benefit row. Restored <i>and</i> consumed, not just put back.</li>
+      </ul>
+      <h4 style="margin-top:14px">What I did not cut</h4>
+      <ul>
+        <li><b>Consent Level 1</b> stays exactly where it is. It is a legal gate on processing health data, not a conversion screen — moving it would be advice about their compliance, not their funnel.</li>
+        <li><b>“How did you discover Lifesum?”</b> is real attribution value, so it moved past the paywall rather than being deleted. They keep the data, it stops costing pre-paywall momentum.</li>
+        <li><b>Every body-basics question</b> (gender, birth date, height, current weight, goal weight, activity, pace) — all seven feed the 1,712 kcal target and the goal date. They earn their place, and the wheel picker is the best control in the flow.</li>
+      </ul>
+      <h4 style="margin-top:14px">What I could not build without you</h4>
+      <ul>
+        <li><b>The trial length.</b> Apple's listing tags all three Lifesum SKUs “Trial” but does not publish the duration. The offer paywall says “Today — $0 charged” and “Before your trial ends” rather than inventing “7 days”. Give me the number and it becomes a dated timeline.</li>
+        <li><b>The 1,712 kcal target and the goal date</b> are rendered as arithmetic on screen (start − target ÷ pace), matching the figure Lifesum's own daily-target screen shows. The real plan engine is theirs.</li>
+        <li><b>“5x more likely to achieve lasting results”</b> is Lifesum's own paywall claim, kept verbatim. I did not generate it and I have not verified the study behind it — worth confirming before this goes in front of a prospect.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- sources modal -->
+<div class="modal" id="srcmodal">
+  <div class="modalbox">
+    <h3>Sources &amp; grounding</h3>
+    <p>Every price, rating, award, quote and partnership in this prototype comes from Lifesum's own published material or Apple's listing of their app. Nothing is invented.</p>
+    <dl>
+      <dt>Prices — $49.99 / yr · $14.99 / 3 mo · $7.49 / mo</dt>
+      <dd>Apple App Store, “Subscriptions” section of the Lifesum listing. All three are tagged <b>Trial</b> — that is the alternative SKU the offer paywall uses.<br><a href="https://apps.apple.com/us/app/lifesum-food-tracker-fasting/id286906691" target="_blank">apps.apple.com/us/app/…/id286906691</a></dd>
+      <dt>Strikethroughs — $99.99 / $30.00 / $14.99 and “50% off Premium”</dt>
+      <dd>Lifesum's own in-app paywall, from the capture frames supplied. Kept verbatim rather than re-anchored.</dd>
+      <dt>Rating — 4.6, 151K ratings · Editors' Choice</dt>
+      <dd>Apple App Store listing, US storefront. (Lifesum's in-app proof card shows 4.6 / 66K — a different storefront snapshot. The prototype uses the higher, currently-published US figure.)</dd>
+      <dt>“65+ Million users”</dt>
+      <dd>Lifesum's own App Store description: “Join 65 million users on the path to better health.” Their website states “Trusted by 60+ million users” and “920,957 reviews and counting!”</dd>
+      <dt>Testimonials — Michelle Z. and Anabelle, US</dt>
+      <dd>Both appear on Lifesum's own onboarding and paywall screens in the supplied frames. Reproduced, not written.</dd>
+      <dt>Partnerships — Apple Health, Oura, Withings, Runkeeper</dt>
+      <dd>Named in Lifesum's App Store description. The Lifesum–ŌURA partnership has its own press release on lifesum.com (May 2023).<br><a href="https://lifesum.com/page/lifesum-and-oura-partner-to-connect-nutrition-and-sleep-via-health-connect-by-and" target="_blank">lifesum.com/page/lifesum-and-oura-partner…</a></dd>
+      <dt>Press — TechCrunch, Cosmopolitan, Forbes, Wired, Financial Times</dt>
+      <dd>Listed on lifesum.com. Not used on any screen in this build — available if you want a press strip on the paywall.</dd>
+      <dt>Impact ranges</dt>
+      <dd>Adapty's onboarding and paywall teardown libraries. Expected effect from teardowns and A/B tests across subscription apps — <b>not</b> measured lift for Lifesum.</dd>
+    </dl>
+    <button class="modalclose" onclick="document.getElementById('srcmodal').classList.remove('on')">Close</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE — pre-filled so any jump chip lands on a warm prospect
+   ============================================================ */
+var S = {
+  name:'Julia', goal:'Lose weight',
+  also:['Stabilize my mood','Better fitting clothes'],
+  gender:'Female', dob:'18 Jun 1999', height:'151.0 cm',
+  weight:57, goalWeight:50, unit:'kg',
+  challenges:['Planning what to eat','Managing cravings'],
+  activity:'Moderately active', pace:1, plan:'12m', discover:null
+};
+var PACES=[{v:0.25,l:'Gentle and steady'},{v:0.5,l:'Sustainable'},{v:0.75,l:'Determined'},{v:1,l:'Focused commitment'}];
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function goalDate(){
+  var d=Math.max(0,S.weight-S.goalWeight);
+  var weeks=Math.max(1,Math.ceil(d/S.pace));
+  var t=new Date(); t.setDate(t.getDate()+weeks*7); return t;
+}
+function fmtDate(t){ return t.getDate()+' '+MON[t.getMonth()]; }
+function fmtDateLong(t){ return t.getDate()+' '+['January','February','March','April','May','June','July','August','September','October','November','December'][t.getMonth()]; }
+
+/* ============================================================
+   SCREEN ROUTER
+   ============================================================ */
+var ORDER=['intro1','intro2','proof','consent','goal','also','gender','dob','height','weight','goalweight','challenge','activity','pace','loader','payoff','value1','value2','paywall','account','health','discover','done'];
+var scrs={}, cur=null, hist=[];
+document.querySelectorAll('.scr').forEach(function(s){ scrs[s.dataset.id]=s; });
+
+function go(id,opts){
+  opts=opts||{};
+  if(cur===id) return;
+  var prev=cur;
+  if(prev && scrs[prev]){
+    scrs[prev].classList.remove('is-active');
+    if(!scrs[prev].classList.contains('sheet') && !opts.back) scrs[prev].classList.add('is-past');
+  }
+  cur=id;
+  var el=scrs[id];
+  if(opts.jump){ el.classList.add('nofx'); void el.offsetWidth; }
+  el.classList.remove('is-past');
+  el.classList.add('is-active');
+  if(opts.jump){ setTimeout(function(){ el.classList.remove('nofx'); },40); }
+  el.querySelector('.scr-body').scrollTop=0;
+  document.getElementById('sbar').classList.toggle('on-dark', id==='loader');
+  if(!opts.back && prev) hist.push(prev);
+  syncScreen(id);
+  renderPanel(id);
+  renderChips();
+}
+function nextOf(id){ var i=ORDER.indexOf(id); return i>=0&&i<ORDER.length-1?ORDER[i+1]:null; }
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-go]'); if(!t) return;
+  var a=t.dataset.go;
+  if(a==='next'){ var n=nextOf(cur); if(n) go(n); }
+  else if(a==='back'){ var p=hist.pop(); if(p) go(p,{back:true}); }
+  else if(a==='offer'){ go('offer'); }
+  else if(a==='skipoffer'){ go('account'); }
+  else if(a==='iosheet'){ go('iosheet'); }
+  else if(a==='afterios'){ go('discover'); }
+  else if(a==='restart'){ hist=[]; go('intro1',{jump:true}); }
+  else { go(a); }
+});
+
+/* option groups */
+document.addEventListener('click',function(e){
+  var o=e.target.closest('.opt,.plan'); if(!o) return;
+  var g=o.closest('[data-group]'); if(!g) return;
+  var key=g.dataset.group, multi=g.dataset.mode==='multi';
+  if(multi){ o.classList.toggle('sel'); }
+  else { g.querySelectorAll('.opt,.plan').forEach(function(x){x.classList.remove('sel')}); o.classList.add('sel'); }
+  var sel=[].slice.call(g.querySelectorAll('.sel')).map(function(x){return x.dataset.v});
+  if(key==='goal') S.goal=sel[0]||'';
+  if(key==='also') S.also=sel;
+  if(key==='gender') S.gender=sel[0]||'';
+  if(key==='challenges') S.challenges=sel;
+  if(key==='activity') S.activity=sel[0]||'';
+  if(key==='discover') S.discover=sel[0]||'';
+  if(key==='plan') S.plan=sel[0]||'12m';
+  syncScreen(cur);
+});
+
+/* pace slider */
+var pr=document.getElementById('pacerange');
+pr.addEventListener('input',function(){
+  var p=PACES[+pr.value]; S.pace=p.v;
+  document.getElementById('paceval').textContent=p.v+'kg/week';
+  document.getElementById('pacelbl').textContent=p.l;
+});
+
+/* ============================================================
+   WHEEL PICKER — their signature control, real scroll-snap
+   ============================================================ */
+var IH=38;
+function buildWheel(col,items,sel,cb){
+  col.innerHTML='<div class="sp"></div>'+items.map(function(v){return '<div class="wi">'+v+'</div>'}).join('')+'<div class="sp"></div>';
+  var kids=[].slice.call(col.querySelectorAll('.wi'));
+  function paint(i){ kids.forEach(function(k,j){ var d=Math.abs(j-i); k.className='wi'+(d===0?' d0':d===1?' d1':''); }); }
+  var tid;
+  col.addEventListener('scroll',function(){
+    var i=Math.max(0,Math.min(items.length-1,Math.round(col.scrollTop/IH)));
+    paint(i); clearTimeout(tid);
+    tid=setTimeout(function(){ cb(items[i],i); },90);
+  });
+  col.scrollTop=sel*IH; paint(sel);
+}
+function range(a,b,pad){ var r=[]; for(var i=a;i<=b;i++) r.push(pad?(''+i).padStart(2,'0'):''+i); return r; }
+
+/* DOB */
+var dw=document.querySelector('[data-wheel="dob"]');
+buildWheel(dw.querySelector('[data-col="day"]'),range(1,31),17,function(v){ S.dob=v+S.dob.slice(S.dob.indexOf(' ')); });
+buildWheel(dw.querySelector('[data-col="mon"]'),MON,5,function(){});
+buildWheel(dw.querySelector('[data-col="year"]'),range(1950,2010),49,function(){});
+/* HEIGHT */
+var hw=document.querySelector('[data-wheel="height"]');
+buildWheel(hw.querySelector('[data-col="h1"]'),range(140,205),11,function(v){ S.height=v+'.'+(S.height.split('.')[1]||'0 cm'); });
+buildWheel(hw.querySelector('[data-col="h2"]'),['0',',  1',',  2',',  3',',  4',',  5',',  6',',  7',',  8',',  9'],0,function(){});
+buildWheel(hw.querySelector('[data-col="hu"]'),['cm','ft/in'],0,function(){});
+/* WEIGHT */
+var ww=document.querySelector('[data-wheel="weight"]');
+buildWheel(ww.querySelector('[data-col="w1"]'),range(40,150),17,function(v){ S.weight=+v; syncScreen(cur); document.getElementById('startcard').style.display='block'; });
+buildWheel(ww.querySelector('[data-col="w2"]'),['0',',  1',',  2',',  3',',  4',',  5',',  6',',  7',',  8',',  9'],0,function(){});
+buildWheel(ww.querySelector('[data-col="wu"]'),['kg','lbs','st/lbs'],0,function(){});
+/* GOAL WEIGHT */
+var gw=document.querySelector('[data-wheel="goalweight"]');
+buildWheel(gw.querySelector('[data-col="g1"]'),range(40,150),10,function(v){ S.goalWeight=+v; syncScreen(cur); });
+buildWheel(gw.querySelector('[data-col="g2"]'),['0',',  1',',  2',',  3',',  4',',  5',',  6',',  7',',  8',',  9'],0,function(){});
+buildWheel(gw.querySelector('[data-col="gu"]'),['kg','lbs','st/lbs'],0,function(){});
+
+/* ============================================================
+   LIVE SYNC — every answer visibly consumed downstream
+   ============================================================ */
+var PLANS={'1m':{p:'$7.49',per:'/ month'},'12m':{p:'$49.99',per:'/ year'},'3m':{p:'$14.99',per:'/ 3 months'}};
+function syncScreen(id){
+  var d=Math.max(0,S.weight-S.goalWeight), gd=goalDate();
+  var dc=document.getElementById('deltachip');
+  if(dc) dc.innerHTML='<i></i>'+(d>0? d+' '+S.unit+' to go' : 'Maintain '+S.goalWeight+' '+S.unit);
+  document.getElementById('goalbig').textContent=S.goalWeight+' '+S.unit;
+  document.getElementById('payofftitle').textContent=S.name+', you will reach your goal by '+fmtDateLong(gd);
+  document.getElementById('fy-goal').textContent=S.goal||'—';
+  document.getElementById('fy-also').textContent=S.also.length?S.also.join(', '):'—';
+  document.getElementById('fy-w').textContent=S.weight+' '+S.unit+' → '+S.goalWeight+' '+S.unit;
+  document.getElementById('fy-pace').textContent=S.pace+' '+S.unit+' / week';
+  document.getElementById('fy-act').textContent=S.activity||'—';
+  document.getElementById('fy-ch').textContent=S.challenges.length?S.challenges.join(', '):'—';
+  var m=[]; for(var i=0;i<3;i++){ var t=new Date(); t.setMonth(t.getMonth()+i); m.push('<span>'+MON[t.getMonth()]+'</span>'); }
+  document.getElementById('chartmonths').innerHTML=m.join('');
+  document.getElementById('pwchip').innerHTML='<i></i>'+(S.goal||'Your goal')+' · '+S.weight+' → '+S.goalWeight+' '+S.unit;
+  document.getElementById('pwhead').textContent=S.name+', reach '+S.goalWeight+' '+S.unit+' by '+fmtDate(gd)+' — and stay there';
+  var pl=PLANS[S.plan]||PLANS['12m'];
+  document.getElementById('pwcta').innerHTML='Continue — '+pl.p+' '+pl.per;
+  document.getElementById('offersub').textContent='You’re '+d+' '+S.unit+' from '+S.goalWeight+' '+S.unit+'. See week one of your plan before you’re charged anything.';
+}
+
+/* loader — visibly consumes the answers */
+var loadTimer=null;
+function runLoader(){
+  var host=document.getElementById('loadlines'), pctEl=document.getElementById('pct');
+  var lines=[
+    'Goal set to <b>'+(S.goal||'your goal')+'</b>',
+    'Target <b>'+S.goalWeight+' '+S.unit+'</b> at <b>'+S.pace+' '+S.unit+'/week</b>',
+    'Adjusted for <b>'+(S.activity||'your activity')+'</b>',
+    'Daily energy target <b>1,712 kcal</b>',
+    'Coaching tuned to <b>'+(S.challenges[0]||'your habits').toLowerCase()+'</b>',
+    'Goal date <b>'+fmtDate(goalDate())+'</b>'
+  ];
+  host.innerHTML=lines.map(function(t){return '<div class="lline"><span class="ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0A3A2A" stroke-width="4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span><span>'+t+'</span></div>'});
+  host.innerHTML=lines.map(function(t){return '<div class="lline"><span class="ck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0A3A2A" stroke-width="4" stroke-linecap="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span><span>'+t+'</span></div>'}).join('');
+  var kids=host.querySelectorAll('.lline');
+  var n=0; pctEl.textContent='0%';
+  clearInterval(loadTimer);
+  loadTimer=setInterval(function(){
+    n+=2; if(n>100){ clearInterval(loadTimer); if(cur==='loader') setTimeout(function(){ if(cur==='loader') go('payoff'); },520); return; }
+    pctEl.textContent=n+'%';
+    var k=Math.floor(n/100*kids.length);
+    for(var i=0;i<k&&i<kids.length;i++) kids[i].classList.add('on');
+  },42);
+}
+
+/* ============================================================
+   SIDE PANEL
+   ============================================================ */
+var PANEL={
+ intro1:{n:1,t:'Nutrition is your superpower',tags:['kept'],
+  why:'Benefit-first opener with photography and a live coaching callout. In Health &amp; Fitness the emotional, photo-led open outperforms an illustrated one, and the callout previews the product’s actual output before asking for anything. No reason to touch it.',
+  kept:'The square photo card, the green lightning tile, the white coaching callout with its shadow, the three-dot pager, the 23px tight-tracked headline.',
+  ship:'Screen 1 of 3 in the intro carousel. Identical.',
+  iv:'CR +3–8%',il:'Copy tier — held, not changed'},
+ intro2:{n:2,t:'Starting here is enough',tags:['kept'],
+  why:'Second carousel beat. Non-judgemental framing is the right tone for a category where most installs arrive mid-guilt. Kept verbatim.',
+  kept:'Photography, pager dots, headline/sub rhythm, docked NEXT.',
+  ship:'Screen 2 of 3. Identical.',
+  iv:'CR +3–8%',il:'Copy tier — held'},
+ proof:{n:3,t:'Social proof, early',tags:['kept'],
+  why:'Proof placed early is the right fork for cold paid traffic: it buys trust before the flow asks for eighteen answers. Lifesum already does this and most flows do not. The only change is the number — their card shows 66K ratings, Apple currently publishes 151K on the US storefront. Bigger, and theirs.',
+  kept:'The App Store gradient tile, the forest-green users tile, the laurel Editor’s choice line, the review card with date, stars, reviewer name and the ratings footer.',
+  ship:'Screen 3 of 3, then NEXT into the flow.',
+  iv:'CR +5–12%',il:'Specificity improvement on existing proof'},
+ consent:{n:4,t:'Consent Level 1',tags:['kept'],
+  why:'Deliberately left in place. This is a legal gate on processing health data under GDPR, not a conversion screen — it has to precede the quiz. Moving it would be advice about their compliance posture, which is not what you asked me for.',
+  kept:'The radial green icon field, the centred check badge, the three-paragraph consent body with underlined policy links, the I CONSENT button.',
+  ship:'Same position, same copy.',
+  iv:'Neutral',il:'Legal gate — no impact claimed'},
+ goal:{n:5,t:'What brings you here today?',tags:['merged'],
+  why:'The shipping flow asks intent twice: “How do you feel about your weight?” and then, two screens later, “What brings you here today?” with a superset of the same options. One of them is pure drop-off. Merged into this one, which has the richer option set and includes GLP-1 support.',
+  kept:'Every option, verbatim and in their order. White rows, 8px radius, hairline border, green fill on select, the “This helps us personalize your daily recommendations” helper above a docked NEXT.',
+  ship:'Replaces two screens. The answer now drives the loader, the payoff block and the paywall headline.',
+  iv:'CR +8–20% · ARPU +13–35%',il:'Goal capture, when the loop completes'},
+ also:{n:6,t:'What else matters',tags:['kept'],
+  why:'Secondary motivations. Worth keeping because they are what the paywall can speak to when the primary goal is the same for everyone — and this flow now actually shows them back.',
+  kept:'Multi-select behaviour, option copy, green fill, footer chrome.',
+  ship:'Unchanged, and now rendered in “Built from your answers”.',
+  iv:'CR +5–10%',il:'Element — payoff density'},
+ gender:{n:7,t:'Gender at birth',tags:['kept'],
+  why:'Feeds the energy calculation. Their two-up card layout is a good control and the helper text already explains why they are asking, which is the pattern most flows miss.',
+  kept:'The wide two-up cards, the explanatory helper line, docked NEXT.',
+  ship:'Unchanged.',
+  iv:'—',il:'Feeds the 1,712 kcal target'},
+ dob:{n:8,t:'Date of birth',tags:['kept'],
+  why:'First of the four wheel screens. These are the best controls in the flow — a real three-column snap wheel with a single beige highlight bar across all columns. Rebuilt as a working wheel, not a picture of one. Scroll it.',
+  kept:'Three columns, 38px rows, the cream-2 highlight bar spanning the full width, opacity falloff away from centre, the “age influences your energy needs” helper.',
+  ship:'Unchanged.',
+  iv:'—',il:'Feeds the energy calculation'},
+ height:{n:9,t:'Height',tags:['kept'],
+  why:'Value / decimal / unit wheel. The unit column living inside the wheel instead of as a segmented control is distinctly theirs — kept exactly, including cm and ft/in.',
+  kept:'The three-column value-decimal-unit wheel, the highlight bar, the helper copy.',
+  ship:'Unchanged.',
+  iv:'—',il:'Feeds the energy calculation'},
+ weight:{n:10,t:'Current weight + starting point',tags:['kept'],
+  why:'Their lilac “Great — we’ve got your starting point” card is a micro-milestone: instant feedback that makes the answer feel consequential. It fires here when you move the wheel. Most flows have nothing like it.',
+  kept:'The wheel, the kg / lbs / st-lbs unit column, and the lilac interstitial card verbatim.',
+  ship:'Unchanged. Scroll the wheel to trigger the card.',
+  iv:'CR +3–8%',il:'Micro-milestone, already present'},
+ goalweight:{n:11,t:'Goal weight',tags:['kept','new'],
+  why:'The wheel is untouched. One thing added: a live delta chip under it, so the gap the rest of the flow is about becomes visible at the moment they set it. It uses their existing goal-chip component.',
+  kept:'The wheel, the units column, the helper, the docked NEXT.',
+  ship:'Wheel identical; the delta chip is new and is the first place the answer is echoed back.',
+  iv:'CR +3–8%',il:'Instant feedback after answering'},
+ challenge:{n:12,t:'What feels challenging',tags:['kept'],
+  why:'The most useful question in the whole flow and the shipping version does nothing with it. Kept in place — but it now names the coaching focus on the loader and gets its own row on the payoff screen.',
+  kept:'All seven options verbatim, multi-select, green fill.',
+  ship:'Same screen. The answer is now consumed twice downstream.',
+  iv:'CR +5–10%',il:'Element — payoff density'},
+ activity:{n:13,t:'Typical day',tags:['kept'],
+  why:'Activity multiplier for the calorie target. Kept.',
+  kept:'Four options, their order, their controls.',
+  ship:'Unchanged.',
+  iv:'—',il:'Feeds the 1,712 kcal target'},
+ pace:{n:14,t:'Pace',tags:['kept'],
+  why:'This is their commitment screen and it is good: the user picks the aggressiveness, so the goal date that follows is one they chose rather than one they were handed. The dark slider on cream, the big pace number and the “Sources of recommendations” link all stay.',
+  kept:'The slider, the 26px pace numeral, the label beneath, the sources link in the helper, the BUILD MY PLAN button.',
+  ship:'Unchanged. Move the slider — the goal date downstream recalculates.',
+  iv:'CR +5–15%',il:'Commitment screen, already present'},
+ loader:{n:15,t:'The loader now earns itself',tags:['kept','new'],
+  why:'A loader that only counts to 100 is delay — removing one has won +22% CR / +30% ARPU in testing, while a loader with a real payoff behind it wins. Theirs already had a real payoff, so it stays; what it lacked was evidence that the wait was doing anything. The six lines tick in naming the actual answers, so the personalization is visible during the wait, not only after it.',
+  kept:'The forest-green full bleed, the 88px neon numeral, the “Finalizing your plan” line docked at the bottom in neon.',
+  ship:'Same screen and same art. The consumed-answer lines are new.',
+  iv:'CR +10–15%',il:'Micro-loading, when paid off'},
+ payoff:{n:16,t:'The plan — now before sign-up',tags:['kept','moved','new'],
+  why:'The biggest sequence change. In the shipping flow the loader hands off to “Your personalized plan is ready” — an <b>auth wall</b>. The user does the work, the app says the plan exists, then asks for an email before showing it. Simplifying or deferring registration won CR +8% / ARPU +17% in testing. Here the plan is delivered first and the account comes after the paywall.',
+  kept:'The green goal-line chart, the month axis, “Your goal weight”, the 44px numeral, the “You can do it!” pill, and the “[Name], you will reach your goal by [date]” line.',
+  ship:'Same screen, moved ahead of sign-up, plus a “Built from your answers” block that lists all seven answers and the calorie target.',
+  iv:'CR +10–20%',il:'Personalized payoff + deferred registration'},
+ value1:{n:17,t:'Food rating',tags:['merged'],
+  why:'The shipping flow runs four consecutive value screens between the payoff and the paywall. Four beats of the same argument is momentum loss at the most expensive moment in the funnel. Merged into two, each keeping its own hero.',
+  kept:'The green score disc, the plate photo, the floating white benefit chips, the coaching callout, the NEW tag lockup, the headline/sub rhythm.',
+  ship:'Absorbs the separate “Snap a meal” screen.',
+  iv:'CR +3–8%',il:'Copy tier — removing inert repetition'},
+ value2:{n:18,t:'Personalized guidance',tags:['merged'],
+  why:'Second of two. Keeps the daily-target ring, which is the single most concrete thing they show — 1,712 kcal is the plan made visible.',
+  kept:'The calorie ring with remaining / goal, the morning coaching callout verbatim, the NEW tag, the docked CONTINUE.',
+  ship:'Absorbs the separate daily-target screen.',
+  iv:'CR +3–8%',il:'Copy tier'},
+ paywall:{n:19,t:'Paywall — their design, their goal',tags:['kept','new'],
+  why:'Their composition is kept whole: comparison table, award band, 50%-off bar, three plan cards with the 12-month card raised. Two changes. First, the headline names the goal and the date the flow just computed — the shipping headline says only the user’s name, so the goal captured over fourteen screens never reaches the moment of payment. Second, the proof that already exists elsewhere in their own flow (4.6, 151K, Editors’ Choice, 65M) now sits at the decision point.',
+  kept:'FREE vs PREMIUM table and all five feature rows verbatim, the laurel award bar, the Anabelle quote, “50% off Premium”, all three SKUs with their strikethroughs, “Secured with App Store…”, RESTORE PURCHASE / REDEEM CODE, Privacy &amp; Terms.',
+  ship:'Same screen. Headline is goal-personalized; a proof strip sits above the docked footer. The CTA names the price and lives in a docked footer outside the scroll — tap a different plan and it updates.',
+  iv:'CR +15–20%',il:'Goal-personalized paywall + proof at decision point'},
+ offer:{n:20,t:'Offer paywall — on close',tags:['new'],
+  why:'The single largest lever here, and it costs nothing to build. Apple’s listing tags all three Lifesum SKUs <b>Trial</b> — yet no trial appears anywhere on the shipping paywall. Health &amp; Fitness is one of the categories where trials lift LTV, and onboarding paywalls with a trial are the strongest configuration there is. So the close gesture does not dump the user: it re-offers the same annual SKU as the trial they already own. A second-chance offer in the onboarding position converts non-buyers at ARPU +10–15%; the same offer after a later in-app paywall has lost badly, so position is the whole trick.',
+  kept:'Cream surface, goal chip, green docked CTA, the secured line, the plan-card treatment. Nothing new was invented visually.',
+  ship:'New screen. Reachable from the paywall X, or directly from the “Offer paywall” jump chip.',
+  iv:'ARPU +10–15%',il:'Second-chance offer, onboarding position'},
+ account:{n:21,t:'Create account',tags:['moved'],
+  why:'Moved from between the loader and the payoff to after the paywall. The plan has already been shown and the purchase decision already made; the account is now housekeeping rather than a toll gate at the peak of motivation.',
+  kept:'Their field styling with the underline inputs, the Apple / Google / Email / Facebook buttons, the terms line in the footer.',
+  ship:'Moved two steps later. Same screen.',
+  iv:'CR +8% · ARPU +17%',il:'Registration friction removed'},
+ health:{n:22,t:'Apple Health',tags:['moved'],
+  why:'In the shipping flow this fires at screen six, well before the paywall — a system dialog that pulls attention and creates an urge to dismiss at the moment the flow is building momentum. Moving permission requests past the paywall is a documented win. The soft-prompt screen is theirs and stays; only its position changed.',
+  kept:'The radial green field, the three white logo tiles with the forest-green Lifesum tile, the CONNECT button, and the iOS system sheet rendered exactly as it appears.',
+  ship:'Moved from step 6 to after the purchase. Sub-copy now names Oura, Withings and Runkeeper — their own integrations.',
+  iv:'CR +10–15%',il:'Permissions moved past the paywall'},
+ iosheet:{n:22,t:'System permission sheet',tags:['kept'],
+  why:'Rendered as-is. A flow cannot request a permission itself — the app makes the system call — so this is a handoff to whoever owns the app code, not a build item.',
+  kept:'The full iOS sheet: Health Access header, app icon, the data toggles, Turn Off All, Allow / Don’t Allow.',
+  ship:'Unchanged, just later.',
+  iv:'—',il:'Native dialog'},
+ discover:{n:23,t:'How did you discover Lifesum?',tags:['moved'],
+  why:'Attribution, not personalization. It gives the user nothing and the flow never uses it, so in the pre-paywall stretch it is pure drop-off. Not cut — the data is genuinely valuable to them — just moved behind the purchase and marked optional.',
+  kept:'All nine options in their order, their controls, their footer.',
+  ship:'Moved from step 10 to after the paywall.',
+  iv:'CR +5–10%',il:'Inert step removed from the pre-paywall stretch'},
+ done:{n:24,t:'Handoff',tags:['new'],
+  why:'Ends the demo on the first action rather than a dead end, and repeats the calorie target so the prospect sees the number survive all the way through.',
+  kept:'Green disc, headline rhythm, docked CTA.',
+  ship:'Stand-in for their home screen.',
+  iv:'—',il:'Activation, not conversion'}
+};
+function renderPanel(id){
+  var d=PANEL[id]; if(!d) return;
+  document.getElementById('pan').innerHTML=
+   '<div class="step">Step '+d.n+' of 24</div><h3>'+d.t+'</h3>'+
+   '<div class="tagline">'+d.tags.map(function(t){return '<span class="tg '+t+'">'+t+'</span>'}).join('')+'</div>'+
+   '<div class="blk"><h4>Rationale</h4><p>'+d.why+'</p></div>'+
+   '<div class="blk"><h4>Kept from your app</h4><p>'+d.kept+'</p></div>'+
+   '<div class="blk"><h4>In the shipping flow</h4><p>'+d.ship+'</p></div>'+
+   '<div class="impact"><div class="v">'+d.iv+'</div><div class="l">'+d.il+'</div></div>'+
+   '<div class="src"><b>Grounding.</b> Impact ranges are Adapty’s expected effect from teardowns and A/B tests across subscription apps &mdash; not measured lift for Lifesum. Prices, rating, awards, quotes and partners come from Apple’s listing and Lifesum’s own published material; see <a href="#" onclick="document.getElementById(\'srcmodal\').classList.add(\'on\');return false">Sources &amp; grounding</a>.</div>';
+}
+
+/* ============================================================
+   JUMP CHIPS
+   ============================================================ */
+var CHIPS=[
+ ['Intro','intro1'],['Proof','proof'],['Consent','consent'],['Goal','goal'],
+ ['Body basics','dob'],['Goal weight','goalweight'],['Pace','pace'],['Loader','loader'],
+ ['Your plan','payoff'],['Value','value1'],['Paywall','paywall'],['⚡ Offer paywall','offer'],
+ ['Account','account'],['Apple Health','health'],['Attribution','discover']
+];
+function renderChips(){
+  document.getElementById('chiprow').innerHTML=CHIPS.map(function(c){
+    return '<button class="chip'+(c[1]==='offer'?' hot':'')+(cur===c[1]?' on':'')+'" data-jump="'+c[1]+'">'+c[0]+'</button>';
+  }).join('');
+}
+document.addEventListener('click',function(e){
+  var c=e.target.closest('[data-jump]'); if(!c) return;
+  var id=c.dataset.jump;
+  document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('is-active','is-past'); });
+  hist=[]; cur=null;
+  var i=ORDER.indexOf(id);
+  if(i>0) hist=ORDER.slice(0,i);
+  go(id,{jump:true});
+  if(id==='loader') runLoader();
+});
+
+/* start the loader whenever it is entered */
+var _go=go;
+go=function(id,opts){ _go(id,opts); if(id==='loader') runLoader(); else clearInterval(loadTimer); };
+
+/* ============================================================
+   BEFORE / AFTER
+   ============================================================ */
+var BEFORE=[
+ ['Intro — Nutrition is your superpower','kept'],['Intro — Starting here is enough','kept'],
+ ['Proof — App of the Day · 65M · review','kept'],
+ ['How do you feel about your weight?','cut'],
+ ['Consent Level 1 Lifesum AB','kept'],
+ ['Connect Apple Health','moved'],['iOS Health permission sheet','moved'],
+ ['What brings you here today?','kept'],['Choose what else is important','kept'],
+ ['How did you discover Lifesum?','moved'],
+ ['What gender were you born with?','kept'],['When were you born?','kept'],
+ ['How tall are you?','kept'],['How much do you weigh now?','kept'],
+ ['“Great — we’ve got your starting point”','kept'],['What is your goal weight?','kept'],
+ ['What feels challenging?','kept'],['What is your typical day like?','kept'],
+ ['What pace works for you?','kept'],['Loader — 100%','kept'],
+ ['“Your personalized plan is ready” — auth','moved'],['Create account','moved'],
+ ['Payoff — goal weight + date','moved'],
+ ['Daily nutrition target — 856 / 1,712','merged'],['Snap a meal — photo recognition','merged'],
+ ['Food rating','merged'],['Personalized guidance','merged'],
+ ['Paywall — comparison table','kept'],['Paywall — award / testimonial variant','merged']
+];
+var AFTER=[
+ ['Intro — Nutrition is your superpower','kept'],['Intro — Starting here is enough','kept'],
+ ['Proof — now 4.6 · 151K · Editors’ Choice','kept'],
+ ['Consent Level 1 Lifesum AB','kept'],
+ ['What brings you here today?','merged'],['Choose what else is important','kept'],
+ ['What gender were you born with?','kept'],['When were you born?','kept'],
+ ['How tall are you?','kept'],['How much do you weigh now? + starting point','kept'],
+ ['What is your goal weight? + live delta','kept'],['What feels challenging?','kept'],
+ ['What is your typical day like?','kept'],['What pace works for you?','kept'],
+ ['Loader — 100%, naming your answers','kept'],
+ ['Payoff — plan + “Built from your answers”','moved'],
+ ['Food rating + snap a meal','merged'],['Personalized guidance + daily target','merged'],
+ ['Paywall — goal-personalized, proof at CTA','kept'],
+ ['⚡ Offer paywall on close — free trial SKU','new'],
+ ['Create account','moved'],
+ ['Connect Apple Health','moved'],['iOS Health permission sheet','moved'],
+ ['How did you discover Lifesum? (optional)','moved'],
+ ['Handoff — track your first meal','new']
+];
+function paintList(el,arr,cutLast){
+  document.getElementById(el).innerHTML=arr.map(function(s,i){
+    var cls='sq'+(s[1]==='new'?' isnew':'')+(s[1]==='cut'?' iscut':'');
+    return '<div class="'+cls+'"><span class="i">'+(i+1)+'</span><span class="n">'+s[0]+'</span><span class="t '+s[1]+'">'+s[1]+'</span></div>';
+  }).join('');
+}
+paintList('listb',BEFORE); paintList('lista',AFTER);
+document.getElementById('cntb').textContent=BEFORE.length+' screens · no trial shown · no offer on close';
+document.getElementById('cnta').textContent=AFTER.length+' screens · 1 merged out · 4 moved past the paywall · offer paywall added';
+
+var RANK=[
+ ['p0','Fix first','Second-chance offer / trial mismatch','No trial appears anywhere in the shipping flow, yet Apple lists all three Lifesum SKUs as carrying one. Closing the paywall now re-offers the same $49.99 annual SKU as a free trial, with a downsell to $7.49 monthly. Health &amp; Fitness is a category where trials lift LTV.','ARPU +10–15%'],
+ ['p0','Fix first','Registration friction','Sign-up sat between the loader and the payoff: the flow said “your plan is ready”, then asked for an email before showing it. Account creation moved past the paywall; the plan is delivered first.','CR +8% · ARPU +17%'],
+ ['p1','High','The forgotten goal','The paywall headline used the user’s name but never the goal fourteen screens collected it. It now names the target weight and the computed date, and carries a goal chip.','CR +15–20%'],
+ ['p1','High','Permissions before the ask','Apple Health fired at screen 6, before any value was established. Moved to after the purchase; their soft-prompt screen is untouched.','CR +10–15%'],
+ ['p1','High','Micro-loading with a real payoff','The loader counted to 100 and said nothing. Six lines now tick in naming the actual answers — goal, target, pace, activity, calorie target, goal date — so the wait is visibly doing work.','CR +10–15%'],
+ ['p2','Medium','Social proof at decision point','4.6 · 151K ratings · Editors’ Choice · 65M users now sit directly above the docked CTA. The proof already existed in their flow; it just never reached the paywall.','CR +10–15%'],
+ ['p2','Medium','Duplicate goal question','“How do you feel about your weight?” and “What brings you here today?” asked the same thing two screens apart. Merged into the one with the richer option set.','CR +5–10%'],
+ ['p2','Medium','Inert step in the pre-paywall stretch','“How did you discover Lifesum?” is attribution the user gets nothing from. Moved behind the paywall and marked optional, so the data survives without costing momentum.','CR +5–10%'],
+ ['p3','Low','Repetition before the decision','Four consecutive value screens between payoff and paywall merged into two, each keeping its own hero.','CR +3–8%']
+];
+document.getElementById('ranktb').innerHTML=RANK.map(function(r,i){
+  return '<tr><td>'+(i+1)+'</td><td><span class="pri '+r[0]+'">'+r[1]+'</span></td><td><b style="color:#E4E9ED">'+r[2]+'</b></td><td>'+r[3]+'</td><td class="imp">'+r[4]+'</td></tr>';
+}).join('');
+
+function showView(v){
+  document.getElementById('view-proto').classList.toggle('on',v==='proto');
+  document.getElementById('view-ba').classList.toggle('on',v==='ba');
+  document.getElementById('tab-proto').classList.toggle('on',v==='proto');
+  document.getElementById('tab-ba').classList.toggle('on',v==='ba');
+  window.scrollTo(0,0);
+}
+document.getElementById('srcmodal').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('on'); });
+
+/* boot */
+syncScreen('intro1');
+go('intro1',{jump:true});
+</script>
+</body>
+</html>
