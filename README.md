@@ -37,6 +37,10 @@ Every price, rating, award, quote and partnership comes from Lifesum's own publi
 Apple's listing of their app. Nothing is invented. The **Sources & grounding** button in the
 header lists each one with its origin.
 
+All photography is Lifesum's own — lifestyle shots from their CDN via lifesum.com, food shots
+cropped out of their own App Store screenshots (which is also where the 856 / 1,712 kcal figures
+and the "Good morning" coaching copy come from).
+
 Two things deliberately left as slots rather than filled with a plausible number:
 
 - **Trial length.** Apple tags all three SKUs "Trial" but does not publish the duration, so the

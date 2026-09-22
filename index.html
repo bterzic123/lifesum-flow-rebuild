@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>Lifesum — Onboarding &amp; Paywall Rebuild</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +13,9 @@
    DESIGN SYSTEM — extracted from the Lifesum capture frames
    ============================================================ */
 :root{
+  /* Opt out of browser auto-dark-mode: this page manages its own colour. */
+  color-scheme: only light;
+
   /* Lifesum surface palette */
   --cream:#FAF0EA;          /* screen background */
   --cream-2:#EFE2D8;        /* picker highlight bar */
@@ -89,7 +93,7 @@ a{color:inherit}
   background:#000;border-radius:46px;padding:11px;
   box-shadow:0 0 0 1.5px #2B3035, 0 34px 70px -18px rgba(0,0,0,.85);
 }
-.screenwrap{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--cream)}
+.screenwrap{color-scheme:only light;position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--cream)}
 .island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:112px;height:31px;background:#000;border-radius:18px;z-index:50;pointer-events:none}
 .statusbar{
   position:absolute;top:0;left:0;right:0;height:50px;z-index:45;pointer-events:none;
@@ -122,8 +126,8 @@ a{color:inherit}
 
 .scr-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 20px 18px;-webkit-overflow-scrolling:touch}
 .scr-body::-webkit-scrollbar{width:0}
-.scr-body.col{display:flex;flex-direction:column}
-.scr-body.col .dots{margin-top:auto;padding-top:22px}
+.scr-body.vfill{display:flex;flex-direction:column}
+.scr-body.vfill .dots{margin-top:auto;padding-top:22px}
 
 /* THE DOCKED FOOTER — outside the scroll area, no sticky overlay, no negative margins */
 .scr-foot{flex:none;padding:10px 20px 30px;background:var(--cream)}
@@ -459,9 +463,9 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
 <!-- 1 · INTRO 1 -->
 <section class="scr" data-id="intro1">
   <div class="scr-top bare"></div>
-  <div class="scr-body col">
+  <div class="scr-body vfill">
     <div class="media">
-      <img src="img/p-cook.png" alt="">
+      <img src="img/p-cook.jpg" alt="">
       <div class="badge-fab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></div>
       <div class="callout"><span class="lf"><svg width="11" height="11" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#35E06A"/></svg></span><span>Great choice! This meal will give you steady energy throughout the day</span></div>
     </div>
@@ -475,8 +479,8 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
 <!-- 2 · INTRO 2 -->
 <section class="scr" data-id="intro2">
   <div class="scr-top bare"></div>
-  <div class="scr-body col">
-    <div class="media"><img src="img/p-eat.png" alt=""></div>
+  <div class="scr-body vfill">
+    <div class="media"><img src="img/p-eat.jpg" alt=""></div>
     <h2 class="h1" style="margin-top:22px">Starting here, exactly as you are, is enough.</h2>
     <p class="sub">We have what you need to succeed.</p>
     <div class="dots"><i></i><i class="on"></i><i></i></div>
@@ -487,7 +491,7 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
 <!-- 3 · PROOF -->
 <section class="scr" data-id="proof">
   <div class="scr-top bare"></div>
-  <div class="scr-body col">
+  <div class="scr-body vfill">
     <div class="tiles">
       <div class="tile appstore">
         <div class="tl"><svg width="11" height="13" viewBox="0 0 16 19" fill="#fff"><path d="M13 10c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8C3.7 5 2.2 5.9 1.4 7.3c-1.6 2.8-.4 7 1.1 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7 0 0-2.5-1-2.5-3.9ZM10.8 3.4c.6-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.2-.6 2.8-1.4Z"/></svg> AppStore</div>
@@ -732,7 +736,7 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
   <div class="scr-top bare"></div>
   <div class="scr-body">
     <div style="position:relative;margin-bottom:18px">
-      <div class="media short"><img src="img/p-rating.png" alt=""></div>
+      <div class="media short"><img src="img/p-rating.jpg" alt=""></div>
       <div style="position:absolute;left:-2px;top:-8px;width:56px;height:56px;border-radius:50%;background:#35E06A;display:grid;place-items:center;font-family:'Plus Jakarta Sans';font-size:23px;font-weight:800;color:#0B2B18;box-shadow:0 6px 18px rgba(0,0,0,.18)">9</div>
       <div class="floatchip" style="left:8px;bottom:44px">+ Good source of fiber</div>
       <div class="floatchip" style="left:26px;bottom:8px">+ Low in sugar</div>
@@ -753,7 +757,7 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
   <div class="scr-top bare"></div>
   <div class="scr-body">
     <div style="position:relative;margin-bottom:16px">
-      <div class="media short"><img src="img/p-ring.png" alt=""></div>
+      <div class="media short"><img src="img/p-ring.jpg" alt=""></div>
       <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)">
         <div class="ring">
           <svg viewBox="0 0 100 100" style="transform:rotate(-90deg)">
@@ -794,7 +798,7 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
     </div>
 
     <div class="awardhead" style="margin-top:14px;height:128px">
-      <img src="img/p-stretch.png" alt="">
+      <img src="img/p-stretch.jpg" alt="">
       <div class="awardbar">
         <div><svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5"/></svg>App of<br>the day</div>
         <div><svg width="13" height="16" viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13 2C8 4 5 9 6 16c0 3 2 6 2 6"/><path d="M12 6c-3 0-5 2-5 5"/></svg>Editors&rsquo;<br>choice</div>
@@ -1044,6 +1048,11 @@ table.rank .imp{color:#7FE3A0;font-weight:600;white-space:nowrap}
       <dd>Named in Lifesum's App Store description. The Lifesum–ŌURA partnership has its own press release on lifesum.com (May 2023).<br><a href="https://lifesum.com/page/lifesum-and-oura-partner-to-connect-nutrition-and-sleep-via-health-connect-by-and" target="_blank">lifesum.com/page/lifesum-and-oura-partner…</a></dd>
       <dt>Press — TechCrunch, Cosmopolitan, Forbes, Wired, Financial Times</dt>
       <dd>Listed on lifesum.com. Not used on any screen in this build — available if you want a press strip on the paywall.</dd>
+      <dt>Photography</dt>
+      <dd>All of it is Lifesum's. The lifestyle shots are from their own CDN via lifesum.com; the
+      food shots are cropped out of Lifesum's own App Store screenshots. The 856 / 1,712 kcal figures
+      and the &ldquo;Good morning&rdquo; coaching copy come from the same screenshot, so the numbers on the value
+      screens are theirs too.</dd>
       <dt>Impact ranges</dt>
       <dd>Adapty's onboarding and paywall teardown libraries. Expected effect from teardowns and A/B tests across subscription apps — <b>not</b> measured lift for Lifesum.</dd>
     </dl>
